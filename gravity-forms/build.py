@@ -12,10 +12,10 @@ import base64, io, json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 read = lambda n: io.open(os.path.join(HERE, n), encoding='utf-8').read()
 
+LEAFLET_CSS_SRC = read('vendor-leaflet.css')
 CSS = read('hn-location.css')
 JS  = read('hn-location.js')
 
-LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
 FONTS = ('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800'
          '&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap')
 
@@ -29,7 +29,9 @@ HTML_112 = '''<div class="hn-112" role="alert">
 
 # ---- field 4: the map ----
 HTML_MAP = '''<link id="hn-fonts" rel="stylesheet" href="%s">
-<link id="hn-leaflet-css" rel="stylesheet" href="%s">
+<style id="hn-leaflet-css">
+%s
+</style>
 <style id="hn-css">
 %s
 </style>
@@ -65,7 +67,7 @@ HTML_MAP = '''<link id="hn-fonts" rel="stylesheet" href="%s">
     <p class="hn-note" id="hn-note">Kartta on lukittu, jotta sivun selaaminen sujuu. Napauta karttaa ottaaksesi sen käyttöön.</p>
 
   </div>
-</div>''' % (FONTS, LEAFLET_CSS, CSS)
+</div>''' % (FONTS, LEAFLET_CSS_SRC, CSS)
 
 # ---- field 6: provenance + suggestion + confidence strip, then the script ----
 HTML_CONF = '''<div id="hn-loc2">

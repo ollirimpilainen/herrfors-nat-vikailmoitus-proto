@@ -113,6 +113,9 @@ body.hn-map-locked{overflow:hidden}
 .hn-stage.hn-active .leaflet-bottom.leaflet-right{bottom:74px}
 #hn-map .leaflet-top{margin-top:0}
 
+.hn-pin{background:none;border:0}
+.hn-pin svg{display:block;filter:drop-shadow(0 2px 3px rgba(11,37,69,.4))}
+
 .hn-note{font-size:12.5px;color:var(--hn-muted);margin:8px 0 0;line-height:1.45}
 
 /* ---------- provenance, suggestion, confidence ---------- */

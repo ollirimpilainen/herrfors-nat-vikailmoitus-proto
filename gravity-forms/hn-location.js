@@ -204,9 +204,22 @@
     });
 
     /* ---------- coordinates ---------- */
+    /* Leaflet's default marker is a PNG fetched from the CDN, and img-src does not
+       list it, so the pin would silently never appear. An inline SVG needs no request
+       at all and carries the brand colours. */
+    var PIN = L.divIcon({
+      className: 'hn-pin',
+      iconSize: [26, 34],
+      iconAnchor: [13, 34],
+      html: '<svg viewBox="0 0 26 34" width="26" height="34" aria-hidden="true">' +
+            '<path d="M13 1C6.4 1 1 6.4 1 13c0 8.5 12 20 12 20s12-11.5 12-20C25 6.4 19.6 1 13 1z" ' +
+            'fill="#0b2545" stroke="#ffffff" stroke-width="2"/>' +
+            '<circle cx="13" cy="13" r="4.5" fill="#E05A2B"/></svg>'
+    });
+
     function placeMarker(lat,lng){
       if(marker) marker.setLatLng([lat,lng]);
-      else marker = L.marker([lat,lng]).addTo(map);
+      else marker = L.marker([lat,lng], {icon: PIN}).addTo(map);
     }
 
     /* Coordinates and marker always leave together — a pin the data does not
