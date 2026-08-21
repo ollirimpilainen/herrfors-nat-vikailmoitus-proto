@@ -1,5 +1,10 @@
 # One-time setup
 
+> **Done — 21.8.2026.** Repo: https://github.com/ollirimpilainen/herrfors-nat-vikailmoitus-proto
+> Live: https://ollirimpilainen.github.io/herrfors-nat-vikailmoitus-proto/
+> Nothing below needs running again; kept for the record.
+
+
 Paste the prompt below into Claude Code from inside this folder.
 
 ---
