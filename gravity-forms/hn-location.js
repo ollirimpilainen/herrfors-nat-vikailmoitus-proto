@@ -173,21 +173,6 @@
       setFromPin(c.lat, c.lng);
       if(isFull) exitFull();
     });
-    /* OpenStreetMap's tile servers throttle, and they answer 503 rather than stalling.
-       Leaflet leaves a failed tile as a hole and never asks again, which is how a map
-       ends up half grey. Retry twice, backing off, and reuse the exact same URL — a
-       cache-busting query string is answered 503 far more often than the plain one,
-       which is worth knowing on its own. */
-    map.on('tileerror', function(e){
-      var img = e.tile;
-      if(!img || !img.src) return;
-      var tries = (img._hnTries || 0) + 1;
-      if(tries > 2) return;
-      img._hnTries = tries;
-      var url = img.src;
-      setTimeout(function(){ img.src = ''; img.src = url; }, 400 * tries);
-    });
-
     map.on('moveend', updateCommitLabel);
 
     function updateCommitLabel(){
