@@ -145,9 +145,12 @@ a hard constraint: plugin purchases need sign-off, so v1 has to work without one
   (`locationNearestAddress`) rather than posing as the reporter's answer — but whether
   a duty officer finds that useful or misleading is still a päivystys call.
 - **Nominatim rate limit** (~1 req/s) is debounced but not hard-guarded.
-- **Nominatim identification** — a browser can't set User-Agent, so it falls back to
-  Referer. Fine at prototype volume; needs a server-side proxy if this goes to
-  production.
+- **Nominatim needs a server-side proxy — confirmed, not hypothetical.** A browser
+  can't set User-Agent, so identification falls back to Referer. And herrforsnat.fi
+  sends a `connect-src` policy that blocks browser `fetch` outright; the Gravity Forms
+  port works around it with Nominatim's JSONP callback. One small PHP route solves
+  identification, the policy and the rate limit together. See
+  [gravity-forms/README.md](gravity-forms/README.md).
 - **Network area check** is out of scope. Needs the Nät boundary polygon, which may
   not exist in a usable form.
 
@@ -158,6 +161,9 @@ For Oskari:
    existing map service)?
 2. Where do submitted reports actually land — email, ticketing, straight to the
    24/7 operations centre? Determines what format the location needs on arrival.
+   *Partly answered from the site itself:* the live form 32 has no notifications
+   configured and a **Gravityforms Frends** add-on is active, so submissions probably
+   leave through Frends. Worth confirming rather than assuming.
 
 For päivystys / Mikaela:
 3. What does the duty officer actually *do* with the location — type it into a

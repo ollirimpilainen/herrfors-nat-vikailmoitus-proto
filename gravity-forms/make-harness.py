@@ -142,11 +142,8 @@ select,textarea{width:100%%;min-height:52px;padding:12px 14px;font:inherit;font-
     body.innerHTML = '';
     while(tmp.firstChild) body.appendChild(tmp.firstChild);
 
-    body.querySelectorAll('script').forEach(function(old){
-      var fresh = document.createElement('script');
-      fresh.textContent = old.textContent;
-      old.parentNode.replaceChild(fresh, old);
-    });
+    /* The port's script is parked in a non-executable type and promoted by an
+       <img onerror> loader, which fires on its own once the node is in the document. */
 
     applyLogic();
     jQuery(document).trigger('gform_post_render', [1, 1]);

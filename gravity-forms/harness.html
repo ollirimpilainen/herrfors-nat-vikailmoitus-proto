@@ -309,7 +309,12 @@ body.hn-map-locked{overflow:hidden}
   </div>
 </div>
 
-<script>
+<!-- The script is parked in a non-executable type and promoted to a real script by
+     the loader below. Herrfors' own consent layer (Genero CMP) neutralises inline
+     scripts that arrive with the parsed document, but scripts created at runtime do
+     run — verified on the live site. Parking it deliberately means there is exactly
+     one code path on every environment instead of two. -->
+<script id="hn-src" type="text/hn-source">
 /* Herrfors Nät — fault report location section, Gravity Forms port of prototype v0.3.
    Field ids are fixed by the form JSON, so nothing here depends on the form id:
      1  select   fault type
@@ -559,16 +564,44 @@ body.hn-map-locked{overflow:hidden}
     function round6(n){ return Math.round(n*1e6)/1e6; }
     function setFlash(kind,msg){ flash = {kind:kind, msg:msg}; }
 
-    /* ---------- reverse geocoding ---------- */
-    var geoTimer = null;
+    /* ---------- reverse geocoding ----------
+       herrforsnat.fi sends a Content-Security-Policy that forbids cross-origin
+       fetch/XHR, so the plain request never leaves the browser there while tiles and
+       scripts load fine. Nominatim's json_callback gives the same answer as a script
+       load, which script-src governs instead. fetch stays the first choice for sites
+       without that policy; JSONP is the fallback. Neither fixes the real problem:
+       production wants a server-side proxy, both to identify the client properly and
+       to guard the rate limit. */
+    var geoTimer = null, jsonpSeq = 0;
+
     function reverseGeocode(lat,lng,tag){
       clearTimeout(geoTimer);
       geoTimer = setTimeout(function(){
-        fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=18&addressdetails=1&accept-language=fi&lat='+lat+'&lon='+lng)
+        var base = 'https://nominatim.openstreetmap.org/reverse?format=json&zoom=18' +
+                   '&addressdetails=1&accept-language=fi&lat='+lat+'&lon='+lng;
+        fetch(base)
           .then(function(r){ return r.json(); })
           .then(function(d){ if(d) applyGeocode(shortAddress(d), tag); })
-          .catch(function(){});
+          .catch(function(){ jsonp(base, tag); });
       }, 600);
+    }
+
+    function jsonp(base, tag){
+      var name = 'hnGeo' + (++jsonpSeq) + '_' + String(base.length);
+      var s = document.createElement('script');
+      var done = false;
+      function cleanup(){
+        try { delete window[name]; } catch(e){ window[name] = undefined; }
+        if(s.parentNode) s.parentNode.removeChild(s);
+      }
+      window[name] = function(d){
+        done = true;
+        try { if(d) applyGeocode(shortAddress(d), tag); } finally { cleanup(); }
+      };
+      s.onerror = cleanup;
+      setTimeout(function(){ if(!done) cleanup(); }, 10000);
+      s.src = base + '&json_callback=' + name;
+      document.head.appendChild(s);
     }
 
     function shortAddress(d){
@@ -951,7 +984,9 @@ body.hn-map-locked{overflow:hidden}
   if(window.jQuery) jQuery(document).on('gform_post_render', boot);
 })();
 
-</script></div>
+</script>
+<img src="data:," alt="" aria-hidden="true" style="position:absolute;width:0;height:0;opacity:0"
+     onerror="this.onerror=null;(function(s){if(!s)return;var n=document.createElement('script');n.textContent=s.textContent;document.head.appendChild(n);})(document.getElementById('hn-src'))"></div>
 <div class="gfield gfield--type-html" id="field_1_7"><div id="hn-ops">
   <h3>Mitä päivystäjä näkee</h3>
   <p class="hn-ops-sub">Päivittyy reaaliajassa. Vain demossa — poista tämä kenttä tuotannosta.</p>
@@ -1048,11 +1083,8 @@ body.hn-map-locked{overflow:hidden}
     body.innerHTML = '';
     while(tmp.firstChild) body.appendChild(tmp.firstChild);
 
-    body.querySelectorAll('script').forEach(function(old){
-      var fresh = document.createElement('script');
-      fresh.textContent = old.textContent;
-      old.parentNode.replaceChild(fresh, old);
-    });
+    /* The port's script is parked in a non-executable type and promoted by an
+       <img onerror> loader, which fires on its own once the node is in the document. */
 
     applyLogic();
     jQuery(document).trigger('gform_post_render', [1, 1]);

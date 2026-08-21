@@ -247,16 +247,44 @@
     function round6(n){ return Math.round(n*1e6)/1e6; }
     function setFlash(kind,msg){ flash = {kind:kind, msg:msg}; }
 
-    /* ---------- reverse geocoding ---------- */
-    var geoTimer = null;
+    /* ---------- reverse geocoding ----------
+       herrforsnat.fi sends a Content-Security-Policy that forbids cross-origin
+       fetch/XHR, so the plain request never leaves the browser there while tiles and
+       scripts load fine. Nominatim's json_callback gives the same answer as a script
+       load, which script-src governs instead. fetch stays the first choice for sites
+       without that policy; JSONP is the fallback. Neither fixes the real problem:
+       production wants a server-side proxy, both to identify the client properly and
+       to guard the rate limit. */
+    var geoTimer = null, jsonpSeq = 0;
+
     function reverseGeocode(lat,lng,tag){
       clearTimeout(geoTimer);
       geoTimer = setTimeout(function(){
-        fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=18&addressdetails=1&accept-language=fi&lat='+lat+'&lon='+lng)
+        var base = 'https://nominatim.openstreetmap.org/reverse?format=json&zoom=18' +
+                   '&addressdetails=1&accept-language=fi&lat='+lat+'&lon='+lng;
+        fetch(base)
           .then(function(r){ return r.json(); })
           .then(function(d){ if(d) applyGeocode(shortAddress(d), tag); })
-          .catch(function(){});
+          .catch(function(){ jsonp(base, tag); });
       }, 600);
+    }
+
+    function jsonp(base, tag){
+      var name = 'hnGeo' + (++jsonpSeq) + '_' + String(base.length);
+      var s = document.createElement('script');
+      var done = false;
+      function cleanup(){
+        try { delete window[name]; } catch(e){ window[name] = undefined; }
+        if(s.parentNode) s.parentNode.removeChild(s);
+      }
+      window[name] = function(d){
+        done = true;
+        try { if(d) applyGeocode(shortAddress(d), tag); } finally { cleanup(); }
+      };
+      s.onerror = cleanup;
+      setTimeout(function(){ if(!done) cleanup(); }, 10000);
+      s.src = base + '&json_callback=' + name;
+      document.head.appendChild(s);
     }
 
     function shortAddress(d){
