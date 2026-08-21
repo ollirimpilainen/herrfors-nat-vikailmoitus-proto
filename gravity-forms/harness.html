@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="fi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GF harness — Vikailmoitus — sijaintiosio (demo v0.3)</title>
+<style>
+body{margin:0;background:#f4f7fa;font-family:system-ui,sans-serif}
+.harness{max-width:720px;margin:0 auto;padding:20px 16px 80px}
+.harness-bar{background:#0b2545;color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;line-height:1.5}
+.harness-bar b{display:block;font-size:16px;margin-bottom:4px}
+.gform_wrapper{background:#fff;border:1px solid #d9e0ea;border-radius:10px;padding:22px 18px}
+.gfield{margin-bottom:22px}
+.gfield_label,legend.gfield_label{display:block;font-weight:700;font-size:15px;margin-bottom:2px;font-family:Mulish,system-ui,sans-serif}
+.gfield_description{font-size:13.5px;color:#5a6b85;margin-bottom:8px;font-family:Mulish,system-ui,sans-serif}
+select,textarea{width:100%;min-height:52px;padding:12px 14px;font:inherit;font-size:16px;
+  border:1.5px solid #d9e0ea;border-radius:8px;background:#fff;font-family:Mulish,system-ui,sans-serif}
+.gchoice{display:flex;align-items:center;gap:10px;min-height:52px;font-family:Mulish,system-ui,sans-serif}
+.gchoice input{width:22px;height:22px}
+.gform_footer{margin-top:8px}
+.gform_button{min-height:52px;padding:12px 24px;background:#0b2545;color:#fff;border:0;border-radius:8px;
+  font-weight:700;font-size:16px;cursor:pointer;font-family:Mulish,system-ui,sans-serif}
+.hn-logic-hidden{display:none}
+.dump{margin-top:16px;background:#0b2545;color:#dbe6f4;border-radius:10px;padding:14px;
+  font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:pre-wrap;line-height:1.6}
+</style>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head><body>
+<div class="harness">
+  <div class="harness-bar">
+    <b>Gravity Forms -harness</b>
+    Ei WordPressiä — tämä sivu jäljittelee GF:n DOM-rakennetta (input_N-nimet, kenttäkääreet,
+    jQuery, gform_post_render) jotta portti voidaan testata ennen importtia.
+  </div>
+  <div class="gform_wrapper">
+    <form id="gform_1" method="post" onsubmit="return false">
+      <div class="gform_body"><div class="gform_fields">
+<div class="gfield" id="field_1_1"><label class="gfield_label" for="input_1_1">Mistä on kyse?</label><div class="ginput_container"><select name="input_1" id="input_1_1"><option value="">Valitse…</option><option value="outage">Sähkökatko</option><option value="damaged">Johto tai pylväs vaurioitunut</option><option value="flicker">Jännitehäiriö tai valojen välkkyminen</option><option value="meter">Vika mittarissa tai liittymässä</option><option value="streetlight">Katuvalo ei toimi</option><option value="other">Muu vika</option></select></div></div>
+<div class="gfield gfield--type-html" id="field_1_2" data-hn-logic="{&quot;actionType&quot;: &quot;show&quot;, &quot;logicType&quot;: &quot;all&quot;, &quot;rules&quot;: [{&quot;fieldId&quot;: 1, &quot;operator&quot;: &quot;is&quot;, &quot;value&quot;: &quot;damaged&quot;}]}"><div class="hn-112" role="alert">
+  <strong>Älä lähesty vauriokohtaa</strong>
+  <p>Vaurioitunut johto tai pylväs voi olla hengenvaarallinen. Pidä etäisyyttä ja
+     varoita muita paikalla olijoita. Voit täyttää ilmoituksen turvallisen matkan päästä.</p>
+  <a href="tel:112">Soita 112</a>
+</div></div>
+<div class="gfield" id="field_1_3"><legend class="gfield_label">Oletko juuri nyt vian luona?</legend><div class="gfield_description">Tämä kertoo meille, voiko puhelimen paikannusta käyttää.</div><div class="ginput_container"><div class="gchoice"><input name="input_3" type="radio" value="yes" id="choice_1_3_0"><label for="choice_1_3_0">Kyllä, olen paikalla</label></div><div class="gchoice"><input name="input_3" type="radio" value="no" id="choice_1_3_1"><label for="choice_1_3_1">En ole paikalla</label></div></div></div>
+<div class="gfield gfield--type-html" id="field_1_4"><link id="hn-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<link id="hn-leaflet-css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style id="hn-css">
+/* Herrfors Nät — location section for Gravity Forms.
+   Everything is prefixed hn- and every custom property is scoped to the two
+   containers, so nothing leaks into the theme and the theme cannot reach in. */
+#hn-loc,#hn-loc2{
+  --hn-navy:#0b2545; --hn-orange:#E05A2B; --hn-teal:#3ABFA1;
+  --hn-danger:#C62828; --hn-danger-bg:#FDECEA; --hn-warn:#B26A00; --hn-warn-bg:#FFF6E5;
+  --hn-ink:#12203a; --hn-muted:#5a6b85; --hn-line:#d9e0ea; --hn-line-soft:#eaeff5;
+  --hn-tap:52px;
+  font-family:"Mulish",system-ui,-apple-system,sans-serif;
+  color:var(--hn-ink); font-size:16px; line-height:1.55;
+}
+#hn-loc *,#hn-loc2 *{box-sizing:border-box}
+.hn-hidden{display:none !important}
+
+.hn-head{background:#f7fafc;border:1.5px solid var(--hn-line);border-bottom:0;
+  border-radius:10px 10px 0 0;padding:12px 14px}
+.hn-head strong{display:block;font-size:15px;font-weight:700}
+.hn-head span{display:block;font-size:13px;color:var(--hn-muted);margin-top:2px}
+.hn-body{border:1.5px solid var(--hn-line);border-top:1px solid var(--hn-line-soft);
+  border-radius:0 0 10px 10px;padding:14px}
+
+.hn-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:var(--hn-tap);width:100%;padding:12px 18px;
+  font-family:inherit;font-size:16px;font-weight:700;border-radius:8px;
+  border:1.5px solid transparent;cursor:pointer;line-height:1.2;text-transform:none;
+  letter-spacing:normal;box-shadow:none}
+.hn-btn-primary{background:var(--hn-orange);color:#fff}
+.hn-btn-primary:hover:not(:disabled){background:#c94d21}
+.hn-btn-primary:active:not(:disabled){transform:translateY(1px)}
+.hn-btn-ghost{background:#fff;color:var(--hn-navy);border-color:var(--hn-line)}
+.hn-btn-ghost:hover:not(:disabled){border-color:var(--hn-navy)}
+.hn-btn:disabled{opacity:.55;cursor:default}
+.hn-btn-sm{min-height:44px;font-size:13px;width:auto;padding:10px 8px}
+.hn-btn-done{background:#f1fbf8;color:#0a3b31;border-color:var(--hn-teal)}
+.hn-btn.hn-btn-done:disabled{opacity:1;cursor:default}
+.hn-btn:focus-visible{outline:3px solid rgba(224,90,43,.35);outline-offset:1px}
+
+.hn-divider{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--hn-muted);
+  font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.hn-divider::before,.hn-divider::after{content:"";flex:1;height:1px;background:var(--hn-line-soft)}
+
+/* ---------- map stage ---------- */
+.hn-stage{position:relative;border:1.5px solid var(--hn-line);border-radius:8px;
+  overflow:hidden;background:#e8eef4;overscroll-behavior:contain}
+.hn-stage.hn-active{border-color:var(--hn-orange);box-shadow:0 0 0 3px rgba(224,90,43,.16)}
+#hn-map{height:320px;z-index:0;background:#e8eef4}
+#hn-map:focus-visible{outline:3px solid var(--hn-navy);outline-offset:-3px}
+
+.hn-stage.hn-full{position:fixed;inset:0;border-radius:0;border:0;z-index:100000;box-shadow:none}
+.hn-stage.hn-full #hn-map{height:100%;height:100dvh}
+body.hn-map-locked{overflow:hidden}
+
+.hn-gate{position:absolute;inset:0;z-index:500;display:flex;align-items:center;
+  justify-content:center;background:rgba(11,37,69,.34);cursor:pointer;padding:16px;text-align:center}
+.hn-gate:focus-visible{outline:3px solid var(--hn-orange);outline-offset:-5px}
+.hn-gate span{display:inline-flex;align-items:center;gap:9px;justify-content:center;
+  background:#fff;color:var(--hn-navy);padding:14px 20px;border-radius:99px;
+  font-weight:800;font-size:15px;line-height:1.3;box-shadow:0 4px 14px rgba(11,37,69,.28);max-width:280px}
+.hn-gate span::before{content:"\2295";font-size:19px;line-height:1;color:var(--hn-orange)}
+.hn-stage.hn-active .hn-gate{display:none}
+
+.hn-crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:450;pointer-events:none;width:64px;height:64px;display:none}
+.hn-stage.hn-active .hn-crosshair{display:block}
+.hn-crosshair::before,.hn-crosshair::after{content:"";position:absolute;background:var(--hn-navy);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+.hn-crosshair::before{left:50%;top:0;width:2px;height:100%;margin-left:-1px}
+.hn-crosshair::after{top:50%;left:0;height:2px;width:100%;margin-top:-1px}
+.hn-crosshair i{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;
+  border:3px solid var(--hn-orange);border-radius:50%;background:rgba(255,255,255,.55);
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.9)}
+
+.hn-bar{position:absolute;left:0;right:0;bottom:0;z-index:600;display:none;gap:8px;padding:10px;
+  background:rgba(255,255,255,.97);border-top:1px solid var(--hn-line-soft);
+  padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.hn-stage.hn-active .hn-bar{display:flex}
+.hn-bar .hn-btn{flex:1;width:auto}
+.hn-bar .hn-btn-icon{flex:0 0 auto;width:var(--hn-tap);padding:0}
+
+.hn-tools{position:absolute;right:10px;top:10px;z-index:600;display:flex;flex-direction:column;gap:8px}
+.hn-tools button{width:44px;height:44px;border-radius:8px;border:1.5px solid var(--hn-line);
+  background:#fff;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;
+  justify-content:center;box-shadow:0 2px 6px rgba(11,37,69,.16);padding:0;color:var(--hn-navy)}
+.hn-tools button:hover{border-color:var(--hn-navy)}
+.hn-stage:not(.hn-active) .hn-tools{display:none}
+.hn-stage.hn-full .hn-tools{top:calc(10px + env(safe-area-inset-top))}
+
+.hn-pill{display:none;position:absolute;z-index:600;left:62px;right:62px;
+  top:calc(12px + env(safe-area-inset-top));margin:0;text-align:center;pointer-events:none}
+.hn-stage.hn-full .hn-pill{display:block}
+.hn-pill span{display:inline-block;background:rgba(11,37,69,.92);color:#fff;font-size:13.5px;
+  font-weight:700;line-height:1.35;padding:9px 15px;border-radius:99px}
+
+/* leaflet controls, sized for gloved hands */
+#hn-map .leaflet-control-zoom{border:0 !important;box-shadow:none !important;
+  display:flex;flex-direction:column;gap:8px}
+#hn-map .leaflet-control-zoom a{width:44px !important;height:44px !important;
+  line-height:44px !important;font-size:22px !important;
+  border:1.5px solid var(--hn-line) !important;border-radius:8px !important;
+  background:#fff;color:var(--hn-navy) !important;box-shadow:0 2px 6px rgba(11,37,69,.16)}
+#hn-map .leaflet-control-zoom a:hover{border-color:var(--hn-navy) !important}
+.hn-stage:not(.hn-active) .leaflet-control-zoom{display:none}
+#hn-map .leaflet-control-attribution{font-size:10px}
+.hn-stage.hn-active .leaflet-bottom.leaflet-right{bottom:74px}
+#hn-map .leaflet-top{margin-top:0}
+
+.hn-note{font-size:12.5px;color:var(--hn-muted);margin:8px 0 0;line-height:1.45}
+
+/* ---------- provenance, suggestion, confidence ---------- */
+.hn-addr-src{display:none;margin:0 0 12px;font-size:12.5px;line-height:1.45;color:var(--hn-muted)}
+.hn-addr-src.hn-on{display:block}
+.hn-addr-src b{color:var(--hn-ink);font-weight:700}
+
+.hn-suggest{margin:0 0 12px;border:1.5px solid var(--hn-line);border-left:5px solid var(--hn-navy);
+  border-radius:8px;background:#f7fafc;padding:13px 14px}
+.hn-suggest-lbl{margin:0 0 3px;font-size:11px;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--hn-muted)}
+.hn-suggest-val{margin:0 0 11px;font-size:15px;font-weight:700;line-height:1.4;color:var(--hn-navy)}
+.hn-suggest-actions{display:flex;gap:8px}
+.hn-suggest-actions .hn-btn{flex:1 1 0;min-width:0;font-size:13.5px}
+.hn-btn-accent{border-color:var(--hn-navy);color:var(--hn-navy)}
+
+.hn-conf{border:1.5px solid var(--hn-line);border-left-width:5px;border-radius:8px;
+  background:#fbfcfe;padding:12px 14px;transition:border-color .18s ease,background .18s ease}
+.hn-conf[data-state="empty"]{border-left-color:var(--hn-line);color:var(--hn-muted)}
+.hn-conf[data-state="address"]{border-left-color:var(--hn-navy);background:#f7fafc}
+.hn-conf[data-state="reliable"]{border-left-color:var(--hn-teal);background:#f1fbf8}
+.hn-conf[data-state="moderate"],.hn-conf[data-state="poor"]{border-left-color:var(--hn-warn);background:var(--hn-warn-bg)}
+.hn-conf[data-state="rejected"],.hn-conf[data-state="conflict"]{border-left-color:var(--hn-danger);background:var(--hn-danger-bg)}
+.hn-conf-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.hn-dot{width:11px;height:11px;border-radius:50%;background:var(--hn-line);align-self:center;flex:0 0 auto}
+.hn-conf[data-state="address"] .hn-dot{background:var(--hn-navy)}
+.hn-conf[data-state="reliable"] .hn-dot{background:var(--hn-teal)}
+.hn-conf[data-state="moderate"] .hn-dot,.hn-conf[data-state="poor"] .hn-dot{background:var(--hn-warn)}
+.hn-conf[data-state="rejected"] .hn-dot,.hn-conf[data-state="conflict"] .hn-dot{background:var(--hn-danger)}
+.hn-badge{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;background:var(--hn-line-soft);color:var(--hn-muted);white-space:nowrap}
+.hn-conf[data-state="address"] .hn-badge{background:var(--hn-navy);color:#fff}
+.hn-conf[data-state="reliable"] .hn-badge{background:var(--hn-teal);color:#04352b}
+.hn-conf[data-state="moderate"] .hn-badge,.hn-conf[data-state="poor"] .hn-badge{background:var(--hn-warn);color:#fff}
+.hn-conf[data-state="rejected"] .hn-badge,.hn-conf[data-state="conflict"] .hn-badge{background:var(--hn-danger);color:#fff}
+.hn-conf-title{font-size:13px;font-weight:700}
+.hn-conf-msg{font-size:14px;line-height:1.45;margin:6px 0 0}
+.hn-conf-meta{margin-top:10px}
+.hn-coords{display:block;font-family:ui-monospace,Menlo,monospace;font-size:13px;
+  color:var(--hn-ink);overflow-wrap:break-word}
+.hn-desc{display:block;margin-top:3px;font-size:13px;color:var(--hn-muted)}
+.hn-conf-actions{margin-top:12px;display:flex;gap:8px}
+.hn-conf-actions .hn-btn{flex:1 1 0;min-width:0}
+.hn-fail{margin-top:12px;padding:11px 13px;border-radius:6px;font-size:13.5px;line-height:1.5;
+  border-left:4px solid var(--hn-danger);background:var(--hn-danger-bg);color:#4a1414}
+.hn-fail[data-kind="warn"]{border-left-color:var(--hn-warn);background:var(--hn-warn-bg);color:#4a3410}
+
+/* ---------- 112 ---------- */
+.hn-112{padding:16px;background:var(--hn-danger-bg);border-left:5px solid var(--hn-danger);border-radius:8px;
+  font-family:"Mulish",system-ui,sans-serif}
+.hn-112 strong{display:block;font-size:17px;color:#7f1d1d;margin-bottom:6px}
+.hn-112 p{margin:0 0 12px;font-size:14.5px;line-height:1.5;color:#4a1414}
+.hn-112 a{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:12px 22px;
+  background:var(--hn-danger);color:#fff;text-decoration:none;border-radius:8px;font-weight:800;font-size:16px}
+
+/* ---------- demo-only panels ---------- */
+#hn-ops{background:#0b2545;color:#e8eef7;border-radius:10px;padding:20px 18px;
+  font-family:"Mulish",system-ui,sans-serif}
+#hn-ops h3{font-size:18px;margin:0 0 3px;color:#fff;font-weight:700}
+#hn-ops .hn-ops-sub{font-size:13px;color:#a9bdd8;margin:0 0 16px}
+.hn-ops-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;padding:14px}
+.hn-ops-row{display:grid;grid-template-columns:118px 1fr;gap:7px 14px;
+  font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.55}
+.hn-ops-k{color:#93aacb}
+.hn-ops-v{word-break:break-word;color:#eaf1fa}
+.hn-ops-v .hn-ops-sub2{display:block;color:#93aacb;font-size:12px;margin-top:1px}
+.hn-ops-ref{color:#cfe0f5}
+.hn-ops-empty{margin:0;font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#a9bdd8}
+.hn-ops-flag{color:#ffb4a8;font-weight:700}
+.hn-ops-ok{color:#7fe3c6;font-weight:700}
+.hn-ops-flags{margin-top:14px;display:grid;gap:7px}
+.hn-ops-warn{font-size:13.5px;font-weight:700;line-height:1.45;color:#ffc9c0;
+  background:rgba(198,40,40,.2);border-radius:6px;padding:9px 11px}
+.hn-ops-link{margin:15px 0 0;font-size:14px;font-weight:700}
+.hn-ops-link a{color:#9fd2ff}
+#hn-ops details{margin-top:14px}
+#hn-ops summary{cursor:pointer;font-size:13px;font-weight:700;color:#a9bdd8;padding:4px 0}
+#hn-ops pre{background:rgba(0,0,0,.28);border-radius:8px;padding:12px;overflow:auto;
+  font-size:12px;line-height:1.6;margin:8px 0 0;color:#dbe6f4;white-space:pre-wrap}
+
+#hn-sim{background:#fff;border:1.5px dashed var(--hn-line);border-radius:10px;padding:18px;
+  font-family:"Mulish",system-ui,sans-serif}
+#hn-sim h3{font-size:15px;margin:0 0 3px;color:#0b2545;font-weight:800}
+#hn-sim p{font-size:13px;color:#5a6b85;margin:0 0 12px;line-height:1.45}
+.hn-sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.hn-sim-grid .hn-btn{font-size:13.5px;min-height:44px;padding:8px 10px;width:auto}
+
+@media (max-width:560px){
+  .hn-ops-row{grid-template-columns:1fr;gap:2px}
+  .hn-ops-k{margin-top:9px}
+  .hn-ops-row > .hn-ops-k:first-child{margin-top:0}
+}
+@media (max-width:520px){ #hn-map{height:300px} }
+@media (prefers-reduced-motion:reduce){ #hn-loc *,#hn-loc2 *{transition:none !important;animation:none !important} }
+
+</style>
+
+<div id="hn-loc">
+  <div class="hn-head">
+    <strong>Sijainnin antaminen</strong>
+    <span id="hn-head-hint">Vastaa ensin yllä olevaan kysymykseen.</span>
+  </div>
+  <div class="hn-body">
+
+    <div id="hn-gps-block" class="hn-hidden">
+      <button type="button" class="hn-btn hn-btn-primary" id="hn-btn-gps">Käytä nykyistä sijaintiani</button>
+      <div class="hn-divider">tai</div>
+    </div>
+
+    <div class="hn-stage" id="hn-stage">
+      <div id="hn-map"></div>
+      <div class="hn-crosshair" aria-hidden="true"><i></i></div>
+      <div class="hn-gate" id="hn-gate" role="button" tabindex="0" aria-label="Ota kartta käyttöön">
+        <span id="hn-gate-text">Napauta karttaa merkitäksesi sijainnin</span>
+      </div>
+      <div class="hn-tools">
+        <button type="button" id="hn-btn-full" title="Suurenna kartta" aria-label="Suurenna kartta">⛶</button>
+        <button type="button" id="hn-btn-recenter" title="Keskitä sijaintiini" aria-label="Keskitä sijaintiini">◎</button>
+      </div>
+      <p class="hn-pill"><span>Siirrä karttaa niin että tähtäin osuu vikapaikkaan</span></p>
+      <div class="hn-bar">
+        <button type="button" class="hn-btn hn-btn-primary" id="hn-btn-commit">Aseta merkki tähän</button>
+        <button type="button" class="hn-btn hn-btn-ghost hn-btn-icon" id="hn-btn-lock" title="Lukitse kartta" aria-label="Lukitse kartta">✕</button>
+      </div>
+    </div>
+    <p class="hn-note" id="hn-note">Kartta on lukittu, jotta sivun selaaminen sujuu. Napauta karttaa ottaaksesi sen käyttöön.</p>
+
+  </div>
+</div></div>
+<div class="gfield" id="field_1_5"><label class="gfield_label" for="input_1_5">Osoite tai paikan kuvaus</label><div class="gfield_description">Esim. katuosoite, tienristeys tai maamerkki. Täyttyy automaattisesti, jos käytät paikannusta tai karttaa.</div><div class="ginput_container"><textarea name="input_5" id="input_1_5" rows="4" placeholder="Esim. Ähtäväntie 340 tai &quot;metsätie n. 2 km Ähtävän risteyksestä pohjoiseen&quot;"></textarea></div></div>
+<div class="gfield gfield--type-html" id="field_1_6"><div id="hn-loc2">
+  <p class="hn-addr-src" id="hn-addr-src" aria-live="polite"></p>
+
+  <div class="hn-suggest hn-hidden" id="hn-suggest">
+    <p class="hn-suggest-lbl">Kartan mukaan lähin osoite</p>
+    <p class="hn-suggest-val" id="hn-suggest-val"></p>
+    <div class="hn-suggest-actions">
+      <button type="button" class="hn-btn hn-btn-ghost hn-btn-accent hn-btn-sm" id="hn-suggest-use">Käytä tätä</button>
+      <button type="button" class="hn-btn hn-btn-ghost hn-btn-sm" id="hn-suggest-keep">Pidä oma teksti</button>
+    </div>
+  </div>
+
+  <div class="hn-conf" id="hn-conf" data-state="empty" aria-live="polite">
+    <div class="hn-conf-top">
+      <span class="hn-dot" aria-hidden="true"></span>
+      <span class="hn-badge" id="hn-badge">Ei sijaintia</span>
+      <span class="hn-conf-title" id="hn-conf-title">Sijaintia ei ole vielä annettu</span>
+    </div>
+    <p class="hn-conf-msg" id="hn-conf-msg">Käytä paikannusta, merkitse kohta kartalle tai kirjoita osoite.</p>
+    <div class="hn-conf-meta hn-hidden" id="hn-conf-meta"></div>
+    <div class="hn-conf-actions hn-hidden" id="hn-conf-actions">
+      <button type="button" class="hn-btn hn-btn-ghost hn-btn-sm" id="hn-btn-clear">Poista koordinaatit</button>
+      <button type="button" class="hn-btn hn-btn-ghost hn-btn-sm" id="hn-btn-remark">Tarkenna kartalla</button>
+    </div>
+    <div class="hn-fail hn-hidden" id="hn-fail" data-kind="error"></div>
+  </div>
+</div>
+
+<script>
+/* Herrfors Nät — fault report location section, Gravity Forms port of prototype v0.3.
+   Field ids are fixed by the form JSON, so nothing here depends on the form id:
+     1  select   fault type
+     3  radio    at the site? (yes/no)
+     5  textarea address or description  -> locationAddress
+     10 locationAddressSource      16 locationZoomAtDrop
+     11 locationNearestAddress     17 locationCapturedAt
+     12 locationLat                18 locationAtSite
+     13 locationLng                19 locationConfidence
+     14 locationSource             20 locationOverrodeGps
+     15 locationAccuracyM          21 locationGpsRejectedAccuracyM */
+(function(){
+  "use strict";
+
+  var HOME = [63.6745, 22.7031];
+  var LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+
+  function ensureLeaflet(cb){
+    if(window.L) return cb();
+    var existing = document.getElementById('hn-leaflet-js');
+    if(existing){ existing.addEventListener('load', cb); return; }
+    var s = document.createElement('script');
+    s.id = 'hn-leaflet-js'; s.src = LEAFLET; s.onload = cb;
+    document.head.appendChild(s);
+  }
+
+  function boot(){
+    var el = document.getElementById('hn-map');
+    if(!el || el.hnDone) return;          // GF re-renders on ajax validation; init once per DOM
+    el.hnDone = true;
+    ensureLeaflet(function(){ init(el); });
+  }
+
+  function init(mapEl){
+    var $ = function(id){ return document.getElementById(id); };
+    var root = $('hn-loc');
+    var form = root ? root.closest('form') : null;
+    var stage = $('hn-stage');
+
+    /* ---------- state: the emitted contract ---------- */
+    var state = {
+      atSite:null, address:"", addressSource:null,
+      lat:null, lng:null, accuracyM:null, locationSource:null,
+      zoomAtDrop:null, capturedAt:null, confidence:"empty", overrodeGps:false,
+      nearestAddress:null, gpsRejectedAccuracyM:null
+    };
+    var coordTier = null, flash = null, pending = null;
+    var map, marker, meCircle, mapActive = false, isFull = false;
+    var stageHome = null, stageNext = null;
+
+    /* ---------- gravity forms plumbing ---------- */
+    function fld(id){ return form ? form.querySelector('[name="input_'+id+'"]') : null; }
+    function set(id,v){
+      var el = fld(id);
+      if(el) el.value = (v === null || v === undefined) ? '' : String(v);
+    }
+    var addressEl = fld(5);
+
+    function push(){
+      set(10, state.addressSource);
+      set(11, state.nearestAddress);
+      set(12, state.lat);
+      set(13, state.lng);
+      set(14, state.locationSource);
+      set(15, state.accuracyM);
+      set(16, state.zoomAtDrop);
+      set(17, state.capturedAt);
+      set(18, state.atSite === null ? null : (state.atSite ? 'true' : 'false'));
+      set(19, state.confidence);
+      set(20, state.overrodeGps ? 'true' : 'false');
+      set(21, state.gpsRejectedAccuracyM);
+    }
+
+    /* ---------- map: inert until asked ---------- */
+    map = L.map('hn-map', {
+      zoomControl:true, scrollWheelZoom:false, dragging:false,
+      touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, tap:false
+    }).setView(HOME, 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom:19, attribution:'&copy; OpenStreetMap'
+    }).addTo(map);
+
+    setTimeout(function(){ map.invalidateSize(); }, 200);
+
+    function setMapActive(on){
+      mapActive = on;
+      stage.classList.toggle('hn-active', on);
+      ['dragging','touchZoom','doubleClickZoom','scrollWheelZoom','keyboard'].forEach(function(f){
+        if(!map[f]) return;
+        if(f === 'scrollWheelZoom'){ map[f].disable(); return; }  // hijacks page scroll
+        on ? map[f].enable() : map[f].disable();
+      });
+      $('hn-note').textContent = on
+        ? 'Siirrä karttaa niin että tähtäin osuu vikapaikkaan, ja paina “Aseta merkki tähän”.'
+        : 'Kartta on lukittu, jotta sivun selaaminen sujuu. Napauta karttaa ottaaksesi sen käyttöön.';
+      if(!on && isFull) exitFull();
+      updateCommitLabel();
+    }
+
+    $('hn-gate').addEventListener('click', function(){ setMapActive(true); });
+    $('hn-gate').addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        setMapActive(true);
+        var mc = map.getContainer();
+        if(mc.tabIndex >= 0) mc.focus(); else $('hn-btn-lock').focus();
+      }
+    });
+    $('hn-btn-lock').addEventListener('click', function(){
+      setMapActive(false);
+      $('hn-gate').focus();
+    });
+
+    /* ---------- fullscreen ----------
+       The stage is moved to <body> for the duration: a WP theme with a transformed
+       ancestor would otherwise trap position:fixed inside it. */
+    function enterFull(){
+      isFull = true;
+      stageHome = stage.parentNode; stageNext = stage.nextSibling;
+      document.body.appendChild(stage);
+      stage.classList.add('hn-full');
+      document.body.classList.add('hn-map-locked');
+      $('hn-btn-full').textContent = '⤡';
+      $('hn-btn-full').setAttribute('aria-label','Pienennä kartta');
+      setTimeout(function(){ map.invalidateSize(); }, 60);
+    }
+    function exitFull(){
+      isFull = false;
+      stage.classList.remove('hn-full');
+      document.body.classList.remove('hn-map-locked');
+      if(stageHome) stageHome.insertBefore(stage, stageNext);
+      $('hn-btn-full').textContent = '⛶';
+      $('hn-btn-full').setAttribute('aria-label','Suurenna kartta');
+      setTimeout(function(){ map.invalidateSize(); }, 60);
+    }
+    $('hn-btn-full').addEventListener('click', function(){ isFull ? exitFull() : enterFull(); });
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape') return;
+      if(isFull) exitFull();
+      else if(mapActive) setMapActive(false);
+    });
+
+    /* ---------- crosshair commit ---------- */
+    $('hn-btn-commit').addEventListener('click', function(){
+      var c = map.getCenter();
+      setFromPin(c.lat, c.lng);
+      if(isFull) exitFull();
+    });
+    map.on('moveend', updateCommitLabel);
+
+    function updateCommitLabel(){
+      var b = $('hn-btn-commit');
+      b.classList.remove('hn-btn-done');
+      if(!marker){ b.textContent = 'Aseta merkki tähän'; b.disabled = false; return; }
+      var d = map.distance(map.getCenter(), marker.getLatLng());
+      if(d < 8){
+        b.textContent = 'Merkki on tässä'; b.disabled = true; b.classList.add('hn-btn-done');
+      } else {
+        b.textContent = 'Siirrä merkki tähän'; b.disabled = false;
+      }
+    }
+
+    /* ---------- recentre: orientation only, never sets the pin ---------- */
+    $('hn-btn-recenter').addEventListener('click', function(){
+      if(!('geolocation' in navigator)) return;
+      var b = this; b.textContent = '…';
+      navigator.geolocation.getCurrentPosition(function(pos){
+        b.textContent = '◎';
+        var ll = [pos.coords.latitude, pos.coords.longitude];
+        if(meCircle) map.removeLayer(meCircle);
+        meCircle = L.circle(ll, {
+          radius: Math.max(pos.coords.accuracy, 12),
+          color:'#1e64c8', fillColor:'#1e64c8', fillOpacity:.14, weight:2
+        }).addTo(map);
+        map.setView(ll, 16);
+      }, function(){ b.textContent = '◎'; }, { enableHighAccuracy:true, timeout:10000 });
+    });
+
+    /* ---------- coordinates ---------- */
+    function placeMarker(lat,lng){
+      if(marker) marker.setLatLng([lat,lng]);
+      else marker = L.marker([lat,lng]).addTo(map);
+    }
+
+    /* Coordinates and marker always leave together — a pin the data does not
+       contain is exactly the false precision this section exists to avoid. */
+    function clearCoords(){
+      state.lat = null; state.lng = null; state.accuracyM = null;
+      state.locationSource = null; state.zoomAtDrop = null; state.capturedAt = null;
+      state.overrodeGps = false; state.nearestAddress = null;
+      state.gpsRejectedAccuracyM = null;
+      coordTier = null; pending = null;
+      if(marker){ map.removeLayer(marker); marker = null; }
+      if(!state.address) state.addressSource = null;
+      updateCommitLabel();
+    }
+
+    function setFromPin(lat,lng){
+      var correctedGps = state.locationSource === 'gps' || state.gpsRejectedAccuracyM !== null;
+      flash = null; pending = null;
+      state.lat = round6(lat); state.lng = round6(lng);
+      state.locationSource = 'map-pin';
+      state.accuracyM = null;
+      state.zoomAtDrop = map.getZoom();
+      state.capturedAt = new Date().toISOString();
+      coordTier = 'reliable';
+      state.confidence = 'reliable';
+      state.overrodeGps = correctedGps;
+      placeMarker(lat,lng);
+      reverseGeocode(lat,lng,'derived-from-pin');
+      updateCommitLabel();
+      render();
+    }
+
+    function setFromGps(lat,lng,accuracy){
+      flash = null;
+      var tier = tierFor(accuracy);
+      if(tier === 'rejected'){
+        clearCoords();
+        state.gpsRejectedAccuracyM = Math.round(accuracy);
+        state.confidence = 'rejected';
+        render(); return;
+      }
+      state.lat = round6(lat); state.lng = round6(lng);
+      state.locationSource = 'gps';
+      state.accuracyM = Math.round(accuracy);
+      state.zoomAtDrop = null;
+      state.capturedAt = new Date().toISOString();
+      state.overrodeGps = false;
+      state.gpsRejectedAccuracyM = null;
+      coordTier = tier;
+      state.confidence = tier;
+      placeMarker(lat,lng);
+      map.setView([lat,lng], accuracy < 60 ? 17 : accuracy < 250 ? 15 : 13);
+      reverseGeocode(lat,lng,'reverse-geocoded');
+      updateCommitLabel();
+      render();
+    }
+
+    function tierFor(a){
+      if(a <= 50) return 'reliable';
+      if(a <= 200) return 'moderate';
+      if(a <= 1000) return 'poor';
+      return 'rejected';
+    }
+    function round6(n){ return Math.round(n*1e6)/1e6; }
+    function setFlash(kind,msg){ flash = {kind:kind, msg:msg}; }
+
+    /* ---------- reverse geocoding ---------- */
+    var geoTimer = null;
+    function reverseGeocode(lat,lng,tag){
+      clearTimeout(geoTimer);
+      geoTimer = setTimeout(function(){
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=18&addressdetails=1&accept-language=fi&lat='+lat+'&lon='+lng)
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d) applyGeocode(shortAddress(d), tag); })
+          .catch(function(){});
+      }, 600);
+    }
+
+    function shortAddress(d){
+      var a = d.address || {};
+      var street = [a.road || a.pedestrian || a.footway, a.house_number].filter(Boolean).join(' ');
+      var near = street || a.hamlet || a.neighbourhood || a.suburb || a.isolated_dwelling;
+      var place = a.city || a.town || a.village || a.municipality || a.county;
+      var parts = [near, place].filter(Boolean);
+      return parts.length ? parts.join(', ') : (d.display_name || '');
+    }
+
+    /* The address field is authoritative. Words the reporter typed are never
+       overwritten — the geocode is offered beside them and they decide. */
+    function applyGeocode(text, tag){
+      if(!text) return;
+      state.nearestAddress = text;
+      var ownWords = state.addressSource === 'typed' || state.addressSource === 'edited-after-geocode';
+      if(state.address && ownWords){
+        pending = {text:text, tag:tag};
+      } else {
+        state.address = text;
+        if(addressEl) addressEl.value = text;
+        state.addressSource = tag;
+        if(state.confidence === 'conflict' && coordTier) state.confidence = coordTier;
+      }
+      render();
+    }
+
+    $('hn-suggest-use').addEventListener('click', function(){
+      if(!pending) return;
+      state.address = pending.text;
+      if(addressEl) addressEl.value = pending.text;
+      state.addressSource = pending.tag;
+      if(coordTier) state.confidence = coordTier;
+      pending = null;
+      render();
+    });
+    $('hn-suggest-keep').addEventListener('click', function(){
+      if(!pending) return;
+      state.addressSource = 'typed';
+      if(coordTier) state.confidence = coordTier;
+      pending = null;
+      render();
+    });
+
+    /* ---------- at-site gate ----------
+       Split in two: `reconcile` runs only on a real answer from the reporter, so
+       restoring the UI after a Gravity Forms validation re-render cannot re-trigger
+       the clearing rule on state that was already reconciled before submit. */
+    function applyAtSite(isAtSite, reconcile){
+      state.atSite = isAtSite;
+
+      /* A phone fix is the reporter's own position by definition. Once they say
+         they are not at the fault, neither it nor the address derived from it can
+         describe the fault site. */
+      if(reconcile && !isAtSite && state.locationSource === 'gps'){
+        var autoAddr = state.addressSource === 'reverse-geocoded';
+        clearCoords();
+        if(autoAddr){
+          state.address = '';
+          if(addressEl) addressEl.value = '';
+          state.addressSource = null;
+        }
+        state.confidence = 'empty';
+        setFlash('warn', autoAddr
+          ? 'Poistimme puhelimen paikannuksen ja siitä haetun osoitteen, koska et ole vian luona. Merkitse vikapaikka kartalle tai kirjoita osoite.'
+          : 'Poistimme puhelimen paikannuksella saadut koordinaatit, koska et ole vian luona. Merkitse vikapaikka kartalle tai kirjoita osoite.');
+      }
+      if(!isAtSite && meCircle){ map.removeLayer(meCircle); meCircle = null; }
+
+      $('hn-gps-block').classList.toggle('hn-hidden', !isAtSite);
+      $('hn-btn-recenter').style.display = isAtSite ? '' : 'none';
+      $('hn-gate-text').textContent = isAtSite
+        ? 'Napauta karttaa merkitäksesi sijainnin'
+        : 'Napauta karttaa ja merkitse vikapaikka';
+      $('hn-head-hint').textContent = isAtSite
+        ? 'Voit käyttää puhelimen paikannusta, karttaa tai kirjoittaa osoitteen.'
+        : 'Merkitse kohta kartalle tai kirjoita osoite. Puhelimen paikannus ei auta, koska et ole kohteessa.';
+      render();
+    }
+
+    if(form) form.querySelectorAll('input[name="input_3"]').forEach(function(r){
+      r.addEventListener('change', function(){
+        if(!r.checked) return;
+        applyAtSite(r.value === 'yes' || /kyll/i.test(r.value), true);
+      });
+    });
+
+    /* ---------- address ---------- */
+    if(addressEl) addressEl.addEventListener('input', function(){
+      state.address = this.value;
+      if(state.lat !== null){
+        if(!state.address){
+          state.addressSource = null;
+          state.confidence = coordTier || state.confidence;
+        } else if(state.addressSource && state.addressSource !== 'typed'){
+          state.addressSource = 'edited-after-geocode';
+          state.confidence = 'conflict';
+        } else {
+          state.addressSource = 'typed';
+        }
+      } else {
+        state.addressSource = state.address ? 'typed' : null;
+        if(state.address && state.confidence === 'rejected') state.confidence = 'empty';
+      }
+      render();
+    });
+
+    $('hn-btn-clear').addEventListener('click', function(){
+      clearCoords();
+      state.confidence = 'empty';
+      flash = null;
+      render();
+    });
+
+    $('hn-btn-remark').addEventListener('click', function(){
+      setMapActive(true);
+      stage.scrollIntoView({block:'center'});
+      $('hn-btn-commit').focus();
+    });
+
+    /* ---------- gps ---------- */
+    $('hn-btn-gps').addEventListener('click', function(){
+      var b = this;
+      flash = null;
+      if(!('geolocation' in navigator)){
+        setFlash('error','Selaimesi ei tue paikannusta. Merkitse kohta kartalle tai kirjoita osoite.');
+        render(); return;
+      }
+      b.disabled = true; b.textContent = 'Haetaan sijaintia…';
+      render();
+      navigator.geolocation.getCurrentPosition(
+        function(pos){ resetBtn(b); setFromGps(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy); },
+        function(err){
+          resetBtn(b);
+          var m = {
+            1:'Paikannus estettiin. Merkitse kohta kartalle tai kirjoita osoite.',
+            2:'Sijaintia ei voitu määrittää. Merkitse kohta kartalle.',
+            3:'Paikannus kesti liian kauan. Merkitse kohta kartalle.'
+          };
+          setFlash('error', m[err.code] || 'Paikannus epäonnistui. Merkitse kohta kartalle.');
+          render();
+        },
+        { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+      );
+    });
+    function resetBtn(b){ b.disabled=false; b.textContent='Käytä nykyistä sijaintiani'; }
+
+    /* ---------- copy ---------- */
+    var COPY = {
+      empty:{badge:'Ei sijaintia',title:'Sijaintia ei ole vielä annettu',msg:'Käytä paikannusta, merkitse kohta kartalle tai kirjoita osoite.'},
+      reliable:{badge:'Luotettava',title:'Sijainti on tarkka',msg:'Tämä riittää vian paikantamiseen.'},
+      moderate:{badge:'Kohtalainen',title:'Sijainti on suunnilleen oikein',msg:'Tarkenna merkkiä kartalla tai kirjoita osoite, jos tiedät tarkemman paikan.'},
+      poor:{badge:'Epätarkka',title:'Sijainti on epätarkka',msg:'Puhelin ei saanut tarkkaa paikannusta. Merkitse kohta kartalle mahdollisimman tarkasti.'},
+      rejected:{badge:'Hylätty',title:'Sijainti oli liian epätarkka',msg:'Emme tallentaneet koordinaatteja, koska ne olisivat olleet harhaanjohtavia. Merkitse kohta kartalle tai kirjoita osoite.'},
+      conflict:{badge:'Tarkista',title:'Osoite ja merkki eivät ehkä täsmää',msg:'Muokkasit osoitetta sen jälkeen, kun sijainti haettiin. Kartan merkki osoittaa edelleen alkuperäiseen kohtaan.'}
+    };
+    var SRC_LBL = {
+      'typed':'ilmoittajan kirjoittama',
+      'reverse-geocoded':'haettu paikannuksesta, ei vahvistettu',
+      'derived-from-pin':'johdettu kartan merkistä, ei vahvistettu',
+      'edited-after-geocode':'ilmoittaja muokkasi haun jälkeen'
+    };
+
+    function stripCopy(){
+      var s = state.confidence, t = COPY[s] || COPY.empty;
+      var o = {style:s, badge:t.badge, title:t.title, msg:t.msg};
+      if(s === 'empty' && state.address){
+        o.style = 'address';
+        o.badge = 'Osoite annettu';
+        o.title = 'Osoite on annettu, koordinaatteja ei';
+        o.msg = 'Tämä riittää, jos osoite on yksiselitteinen. Merkitse kohta kartalle, jos haluat tarkentaa.';
+      }
+      if(s === 'rejected' && state.gpsRejectedAccuracyM){
+        o.msg = 'Puhelin arvioi tarkkuudeksi vain noin ' + state.gpsRejectedAccuracyM + ' m. ' + t.msg;
+      }
+      if((s === 'moderate' || s === 'poor') && state.accuracyM){
+        o.msg = 'Puhelimen paikannus osui noin ' + state.accuracyM + ' m tarkkuudella. ' + t.msg;
+      }
+      return o;
+    }
+
+    function esc(s){
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function render(){
+      var c = $('hn-conf'), v = stripCopy();
+      c.dataset.state = v.style;
+      $('hn-badge').textContent = v.badge;
+      $('hn-conf-title').textContent = v.title;
+      $('hn-conf-msg').textContent = v.msg;
+
+      var meta = $('hn-conf-meta');
+      if(state.lat !== null){
+        var bits = [state.locationSource === 'gps' ? 'puhelimen paikannus' : 'merkitty kartalle'];
+        if(state.accuracyM !== null) bits.push('n. '+state.accuracyM+' m');
+        if(state.zoomAtDrop !== null) bits.push('zoom '+state.zoomAtDrop);
+        meta.innerHTML = '<span class="hn-coords">'+state.lat.toFixed(6)+', '+state.lng.toFixed(6)+'</span>'+
+                         '<span class="hn-desc">'+esc(bits.join(' · '))+'</span>';
+        meta.classList.remove('hn-hidden');
+        $('hn-conf-actions').classList.remove('hn-hidden');
+      } else {
+        meta.classList.add('hn-hidden');
+        $('hn-conf-actions').classList.add('hn-hidden');
+      }
+
+      var f = $('hn-fail');
+      if(flash){
+        f.textContent = flash.msg; f.dataset.kind = flash.kind; f.classList.remove('hn-hidden');
+      } else {
+        f.classList.add('hn-hidden');
+      }
+
+      var sg = $('hn-suggest');
+      if(pending){
+        $('hn-suggest-val').textContent = pending.text;
+        sg.classList.remove('hn-hidden');
+      } else {
+        sg.classList.add('hn-hidden');
+      }
+
+      var as = $('hn-addr-src');
+      if(state.address && (state.addressSource === 'reverse-geocoded' || state.addressSource === 'derived-from-pin')){
+        as.innerHTML = 'Täytetty automaattisesti ' +
+          (state.addressSource === 'derived-from-pin' ? 'kartan merkistä' : 'puhelimen paikannuksesta') +
+          '. <b>Korjaa vapaasti</b>, jos tunnet paikan paremmin.';
+        as.classList.add('hn-on');
+      } else {
+        as.classList.remove('hn-on');
+        as.innerHTML = '';
+      }
+
+      push();
+      renderOps();
+    }
+
+    /* ---------- demo panel (delete field 7 to remove) ---------- */
+    function renderOps(){
+      var card = $('hn-ops-card');
+      if(!card) return;
+      var rows = [], flags = [];
+
+      if(!state.address && state.lat === null && !state.gpsRejectedAccuracyM && state.atSite === null){
+        card.innerHTML = '<p class="hn-ops-empty">Sijaintia ei ole annettu.</p>';
+        dumpJson(); return;
+      }
+
+      rows.push(['Osoite', esc(state.address || '—') +
+        (state.addressSource ? '<span class="hn-ops-sub2">'+esc(SRC_LBL[state.addressSource])+'</span>' : '')]);
+
+      if(state.nearestAddress && state.nearestAddress !== state.address){
+        rows.push(['Lähin osoite', '<span class="hn-ops-ref">'+esc(state.nearestAddress)+
+          '</span><span class="hn-ops-sub2">kartan mukaan, ei ilmoittajan sanoin</span>']);
+      }
+
+      if(state.lat !== null){
+        var conf = state.confidence === 'reliable'
+          ? '<span class="hn-ops-ok">luotettava</span>'
+          : '<span class="hn-ops-flag">'+(COPY[state.confidence]||COPY.empty).badge.toLowerCase()+'</span>';
+        var ex = [];
+        if(state.locationSource === 'gps') ex.push('puhelimen paikannus');
+        if(state.locationSource === 'map-pin') ex.push('merkitty käsin kartalle');
+        if(state.accuracyM !== null) ex.push('n. '+state.accuracyM+' m');
+        if(state.zoomAtDrop !== null) ex.push(zoomWord(state.zoomAtDrop));
+        rows.push(['Koordinaatit', state.lat.toFixed(6)+', '+state.lng.toFixed(6)+' — '+conf+
+          '<span class="hn-ops-sub2">'+esc(ex.join(', '))+'</span>']);
+      } else {
+        rows.push(['Koordinaatit', '<span class="hn-ops-flag">ei saatavilla</span>']);
+      }
+
+      rows.push(['Ilmoittaja', state.atSite === null ? '—'
+        : state.atSite ? 'paikalla kohteessa'
+        : '<span class="hn-ops-flag">EI paikalla kohteessa</span>']);
+
+      if(state.overrodeGps) flags.push('Ilmoittaja korjasi automaattisen paikannuksen kartalle.');
+      if(state.gpsRejectedAccuracyM) flags.push('Puhelimen paikannus hylättiin: tarkkuus vain n. '+state.gpsRejectedAccuracyM+' m.');
+      if(state.confidence === 'conflict') flags.push('Osoitetta muokattu haun jälkeen — varmista kumpi pätee.');
+      if(state.atSite === false && state.lat === null) flags.push('Ei koordinaatteja eikä ilmoittaja ole paikalla — soita ilmoittajalle.');
+      if(state.lat !== null && state.zoomAtDrop !== null && state.zoomAtDrop < 14) flags.push('Merkki asetettu yleiskuvasta — tarkoitti todennäköisesti aluetta, ei pistettä.');
+
+      var html = '<div class="hn-ops-row">' + rows.map(function(r){
+        return '<div class="hn-ops-k">'+r[0]+'</div><div class="hn-ops-v">'+r[1]+'</div>';
+      }).join('') + '</div>';
+
+      if(flags.length){
+        html += '<div class="hn-ops-flags">' + flags.map(function(x){
+          return '<div class="hn-ops-warn">'+esc(x)+'</div>';
+        }).join('') + '</div>';
+      }
+
+      if(state.lat !== null){
+        var u = 'https://www.openstreetmap.org/?mlat='+state.lat+'&mlon='+state.lng+'#map=17/'+state.lat+'/'+state.lng;
+        html += '<p class="hn-ops-link"><a href="'+u+'" target="_blank" rel="noopener">Avaa sijainti kartalla ↗</a></p>';
+      }
+
+      card.innerHTML = html;
+      dumpJson();
+    }
+
+    function zoomWord(z){
+      if(z>=17) return 'katutaso';
+      if(z>=14) return 'kylä-/kaupunginosataso';
+      return 'yleiskuva — tarkoitti todennäköisesti aluetta';
+    }
+
+    function dumpJson(){
+      var out = $('hn-json');
+      if(!out) return;
+      out.textContent = JSON.stringify({
+        locationAddress:state.address||null, locationAddressSource:state.addressSource,
+        locationNearestAddress:state.nearestAddress,
+        locationLat:state.lat, locationLng:state.lng, locationSource:state.locationSource,
+        locationAccuracyM:state.accuracyM, locationZoomAtDrop:state.zoomAtDrop,
+        locationCapturedAt:state.capturedAt, locationAtSite:state.atSite,
+        locationConfidence:state.confidence, locationOverrodeGps:state.overrodeGps,
+        locationGpsRejectedAccuracyM:state.gpsRejectedAccuracyM
+      }, null, 2);
+    }
+
+    /* ---------- simulation (delete field 8 to remove) ---------- */
+    document.querySelectorAll('[data-hn-sim]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var v = b.getAttribute('data-hn-sim');
+        if(v === 'denied'){
+          setFlash('error','Paikannus estettiin. Merkitse kohta kartalle tai kirjoita osoite.');
+          render(); return;
+        }
+        var acc = parseInt(v,10);
+        setFromGps(HOME[0]+(Math.random()-0.5)*0.02, HOME[1]+(Math.random()-0.5)*0.04, acc);
+      });
+    });
+
+    /* ---------- rehydrate after a Gravity Forms validation re-render ----------
+       GF returns the submitted values of its own fields, hidden ones included. Without
+       this, the first render() would push an empty state over them and a reporter who
+       tripped a validation error on some other field would silently lose the location
+       they had already given. */
+    function hydrate(){
+      if(!form) return;
+      var g = function(id){ var e = fld(id); return (e && e.value !== '') ? e.value : null; };
+      var num = function(v){ return v === null ? null : parseInt(v, 10); };
+
+      state.addressSource        = g(10);
+      state.nearestAddress       = g(11);
+      state.locationSource       = g(14);
+      state.accuracyM            = num(g(15));
+      state.zoomAtDrop           = num(g(16));
+      state.capturedAt           = g(17);
+      state.confidence           = g(19) || 'empty';
+      state.overrodeGps          = g(20) === 'true';
+      state.gpsRejectedAccuracyM = num(g(21));
+
+      if(addressEl && addressEl.value){
+        state.address = addressEl.value;
+        if(!state.addressSource) state.addressSource = 'typed';
+      }
+
+      var lat = g(12), lng = g(13);
+      if(lat !== null && lng !== null){
+        state.lat = parseFloat(lat);
+        state.lng = parseFloat(lng);
+        coordTier = state.locationSource === 'map-pin' ? 'reliable'
+                  : (state.accuracyM !== null ? tierFor(state.accuracyM) : null);
+        placeMarker(state.lat, state.lng);
+        map.setView([state.lat, state.lng], state.zoomAtDrop || 16);
+      }
+    }
+
+    $('hn-btn-recenter').style.display = 'none';
+    hydrate();
+
+    var checked = form ? form.querySelector('input[name="input_3"]:checked') : null;
+    if(checked) applyAtSite(checked.value === 'yes' || /kyll/i.test(checked.value), false);
+    else render();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  if(window.jQuery) jQuery(document).on('gform_post_render', boot);
+})();
+
+</script></div>
+<div class="gfield gfield--type-html" id="field_1_7"><div id="hn-ops">
+  <h3>Mitä päivystäjä näkee</h3>
+  <p class="hn-ops-sub">Päivittyy reaaliajassa. Vain demossa — poista tämä kenttä tuotannosta.</p>
+  <div class="hn-ops-card" id="hn-ops-card"><p class="hn-ops-empty">Sijaintia ei ole annettu.</p></div>
+  <details>
+    <summary>Piilokenttiin tallentuva data (kehittäjälle)</summary>
+    <pre id="hn-json">{}</pre>
+  </details>
+</div></div>
+<div class="gfield gfield--type-html" id="field_1_8"><div id="hn-sim">
+  <h3>Simulointi — vain demossa</h3>
+  <p>Puhelimen paikannusta ei voi pakottaa epätarkaksi, joten näillä pääsee jokaiseen tilaan sisätiloissa.</p>
+  <div class="hn-sim-grid">
+    <button type="button" class="hn-btn hn-btn-ghost" data-hn-sim="12">Hyvä fix · 12 m</button>
+    <button type="button" class="hn-btn hn-btn-ghost" data-hn-sim="140">Kohtalainen · 140 m</button>
+    <button type="button" class="hn-btn hn-btn-ghost" data-hn-sim="600">Heikko · 600 m</button>
+    <button type="button" class="hn-btn hn-btn-ghost" data-hn-sim="2400">Hylättävä · 2400 m</button>
+    <button type="button" class="hn-btn hn-btn-ghost" data-hn-sim="denied">Käyttäjä kielsi</button>
+  </div>
+</div></div>
+<input name="input_10" type="hidden" id="input_1_10" data-label="locationAddressSource">
+<input name="input_11" type="hidden" id="input_1_11" data-label="locationNearestAddress">
+<input name="input_12" type="hidden" id="input_1_12" data-label="locationLat">
+<input name="input_13" type="hidden" id="input_1_13" data-label="locationLng">
+<input name="input_14" type="hidden" id="input_1_14" data-label="locationSource">
+<input name="input_15" type="hidden" id="input_1_15" data-label="locationAccuracyM">
+<input name="input_16" type="hidden" id="input_1_16" data-label="locationZoomAtDrop">
+<input name="input_17" type="hidden" id="input_1_17" data-label="locationCapturedAt">
+<input name="input_18" type="hidden" id="input_1_18" data-label="locationAtSite">
+<input name="input_19" type="hidden" id="input_1_19" data-label="locationConfidence">
+<input name="input_20" type="hidden" id="input_1_20" data-label="locationOverrodeGps">
+<input name="input_21" type="hidden" id="input_1_21" data-label="locationGpsRejectedAccuracyM">
+      </div></div>
+      <div class="gform_footer">
+        <button type="button" class="gform_button" id="dumpBtn">Näytä piilokenttien arvot</button>
+        <button type="button" class="gform_button" id="revalidateBtn">Simuloi GF:n validointivirhe</button>
+      </div>
+    </form>
+  </div>
+  <div class="dump" id="dump">Piilokentät: paina nappia.</div>
+</div>
+<script>
+/* GF conditional logic shim: enough to drive the 112 field from the select */
+(function(){
+  function applyLogic(){
+    document.querySelectorAll('[data-hn-logic]').forEach(function(el){
+      var lg = JSON.parse(el.getAttribute('data-hn-logic'));
+      var ok = lg.rules.every(function(r){
+        var f = document.querySelector('[name="input_'+r.fieldId+'"]');
+        var v = f ? f.value : '';
+        return r.operator === 'is' ? v === r.value : v !== r.value;
+      });
+      el.classList.toggle('hn-logic-hidden', lg.actionType === 'show' ? !ok : ok);
+    });
+  }
+  document.addEventListener('change', applyLogic);
+  document.addEventListener('DOMContentLoaded', applyLogic);
+  /* Faithful re-render: Gravity Forms rebuilds HTML fields from their stored content
+     and writes the submitted values back into the markup. It does NOT hand back the
+     live DOM, so the map container comes back empty and the port must rehydrate from
+     the hidden fields alone. */
+  var pristine = null;
+  document.addEventListener('DOMContentLoaded', function(){
+    pristine = document.querySelector('#gform_1 .gform_body').innerHTML;
+  });
+  document.getElementById('revalidateBtn').addEventListener('click', function(){
+    var snap = {hidden:{}, address:null, radio:null, select:null};
+    document.querySelectorAll('input[type=hidden][data-label]').forEach(function(i){ snap.hidden[i.name] = i.value; });
+    var a = document.querySelector('[name="input_5"]'); snap.address = a ? a.value : '';
+    var r = document.querySelector('input[name="input_3"]:checked'); snap.radio = r ? r.value : null;
+    var s = document.querySelector('[name="input_1"]'); snap.select = s ? s.value : '';
+
+    /* Order matters and this is the order the server produces: markup arrives with
+       the submitted values already in it, and only then do scripts run. Values are
+       therefore set while the nodes are still detached (innerHTML leaves scripts
+       inert), and the port script is re-created afterwards to make it execute. */
+    var tmp = document.createElement('div');
+    tmp.innerHTML = pristine;
+    Object.keys(snap.hidden).forEach(function(n){
+      var el = tmp.querySelector('[name="'+n+'"]');
+      if(el) el.setAttribute('value', snap.hidden[n]);
+    });
+    var a2 = tmp.querySelector('[name="input_5"]'); if(a2) a2.textContent = snap.address;
+    if(snap.select){
+      var o = tmp.querySelector('[name="input_1"] option[value="'+snap.select+'"]');
+      if(o) o.setAttribute('selected','selected');
+    }
+    if(snap.radio){
+      var r2 = tmp.querySelector('input[name="input_3"][value="'+snap.radio+'"]');
+      if(r2) r2.setAttribute('checked','checked');
+    }
+
+    var body = document.querySelector('#gform_1 .gform_body');
+    body.innerHTML = '';
+    while(tmp.firstChild) body.appendChild(tmp.firstChild);
+
+    body.querySelectorAll('script').forEach(function(old){
+      var fresh = document.createElement('script');
+      fresh.textContent = old.textContent;
+      old.parentNode.replaceChild(fresh, old);
+    });
+
+    applyLogic();
+    jQuery(document).trigger('gform_post_render', [1, 1]);
+    document.getElementById('dump').textContent = 'GF-uudelleenrenderöinti simuloitu — tarkista että sijainti säilyi.';
+  });
+
+  document.getElementById('dumpBtn').addEventListener('click', function(){
+    var out = {};
+    document.querySelectorAll('input[type=hidden][data-label]').forEach(function(i){
+      out[i.dataset.label] = i.value === '' ? null : i.value;
+    });
+    out.locationAddress = (document.querySelector('[name="input_5"]')||{}).value || null;
+    document.getElementById('dump').textContent = JSON.stringify(out, null, 2);
+  });
+})();
+</script>
+</body></html>

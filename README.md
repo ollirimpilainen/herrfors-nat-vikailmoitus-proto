@@ -166,6 +166,14 @@ For päivystys / Mikaela:
 4. How often does someone currently have to phone the reporter back to pin down
    the location? That's the success metric for this whole thing.
 
+## Gravity Forms port
+
+`gravity-forms/` holds the same interaction as an importable Gravity Forms form —
+map and logic inside HTML fields, the address as a real required GF field, the data
+model as hidden fields. No plugin and no PHP on the site. See
+[gravity-forms/README.md](gravity-forms/README.md) for the import steps, the field
+map, and the risks worth checking on a live site.
+
 ## Versions
 
 - `index.html` — v0.3, current
