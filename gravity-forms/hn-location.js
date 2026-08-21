@@ -72,16 +72,41 @@
     }
 
     /* ---------- map: inert until asked ---------- */
+    /* fadeAnimation:false — the fade-in sets opacity per frame from a
+       requestAnimationFrame loop, and rAF does not run in a background tab, which
+       leaves loaded tiles stuck at opacity 0. A fault report form has no use for the
+       fade and every use for tiles that appear the moment they arrive. */
     map = L.map('hn-map', {
       zoomControl:true, scrollWheelZoom:false, dragging:false,
-      touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, tap:false
+      touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, tap:false,
+      fadeAnimation:false
     }).setView(HOME, 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom:19, attribution:'&copy; OpenStreetMap'
     }).addTo(map);
 
-    setTimeout(function(){ map.invalidateSize(); }, 200);
+    /* Leaflet caches the container size it measured at init and derives the tile
+       range from it. On a themed page that size is not final at init — web fonts, lazy
+       images and the form's own layout settle later — and a stale size makes Leaflet
+       request too small a range, which shows up as holes in the map. A single timeout
+       is a guess; observing the element is not. */
+    var lastW = 0, lastH = 0;
+    function syncSize(){
+      var r = mapEl.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      if (Math.abs(r.width - lastW) < 1 && Math.abs(r.height - lastH) < 1) return;
+      lastW = r.width; lastH = r.height;
+      map.invalidateSize({animate:false, pan:false});
+    }
+    if (window.ResizeObserver){
+      new ResizeObserver(syncSize).observe(mapEl);
+    } else {
+      window.addEventListener('resize', syncSize);
+    }
+    window.addEventListener('load', syncSize);
+    setTimeout(syncSize, 200);
+    setTimeout(syncSize, 1200);
 
     function setMapActive(on){
       mapActive = on;
@@ -95,6 +120,7 @@
         ? 'Siirrä karttaa niin että tähtäin osuu vikapaikkaan, ja paina “Aseta merkki tähän”.'
         : 'Kartta on lukittu, jotta sivun selaaminen sujuu. Napauta karttaa ottaaksesi sen käyttöön.';
       if(!on && isFull) exitFull();
+      if(on) syncSize();
       updateCommitLabel();
     }
 
