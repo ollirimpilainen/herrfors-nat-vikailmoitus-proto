@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Herrfors Nät — Vikailmoitus, sijaintiosio (prototyyppi)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+
+<style>
+:root{
+  --navy:#0b2545;
+  --navy-2:#1B2D54;
+  --orange:#E05A2B;
+  --teal:#3ABFA1;
+  --salmon:#FAECE7;
+  --danger:#C62828;
+  --danger-bg:#FDECEA;
+  --warn:#B26A00;
+  --warn-bg:#FFF6E5;
+  --ink:#12203a;
+  --muted:#5a6b85;
+  --line:#d9e0ea;
+  --line-soft:#eaeff5;
+  --paper:#ffffff;
+  --bg:#f4f7fa;
+  --radius:10px;
+  --tap:52px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Mulish",system-ui,-apple-system,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 80px}
+
+/* ---------- prototype banner ---------- */
+.proto-bar{
+  background:var(--navy);
+  color:#fff;
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:20px;
+}
+.proto-bar h1{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-size:18px;
+  font-weight:700;
+  margin:0 0 4px;
+  letter-spacing:-.01em;
+}
+.proto-bar p{margin:0;font-size:13px;line-height:1.45;color:#c3d2e6}
+
+/* ---------- form card ---------- */
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px 18px;
+  margin-bottom:16px;
+}
+.card > h2{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-size:21px;
+  font-weight:700;
+  margin:0 0 2px;
+  color:var(--navy);
+  letter-spacing:-.01em;
+}
+.card > .card-sub{
+  margin:0 0 20px;
+  font-size:14px;
+  color:var(--muted);
+}
+
+.field{margin-bottom:22px}
+.field:last-child{margin-bottom:0}
+
+label.lbl{
+  display:block;
+  font-weight:700;
+  font-size:15px;
+  margin-bottom:2px;
+}
+.req{color:var(--orange);font-weight:700}
+.hint{
+  display:block;
+  font-size:13.5px;
+  color:var(--muted);
+  margin:0 0 8px;
+  line-height:1.45;
+}
+
+input[type=text],
+input[type=tel],
+input[type=email],
+select,
+textarea{
+  width:100%;
+  min-height:var(--tap);
+  padding:12px 14px;
+  font-family:inherit;
+  font-size:16px;
+  color:var(--ink);
+  background:#fff;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+}
+textarea{min-height:96px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus,button:focus-visible{
+  outline:3px solid rgba(224,90,43,.35);
+  outline-offset:1px;
+  border-color:var(--orange);
+}
+
+/* ---------- segmented yes/no ---------- */
+.seg{display:flex;gap:10px}
+.seg label{
+  flex:1;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:var(--tap);
+  padding:10px 12px;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  font-weight:700;
+  font-size:15px;
+  cursor:pointer;
+  text-align:center;
+  line-height:1.3;
+}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg label:has(input:checked){
+  border-color:var(--navy);
+  background:var(--navy);
+  color:#fff;
+}
+.seg label:has(input:focus-visible){outline:3px solid rgba(224,90,43,.35);outline-offset:1px}
+
+/* ---------- location block ---------- */
+.loc{
+  border:1.5px solid var(--line);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.loc-head{
+  background:#f7fafc;
+  border-bottom:1px solid var(--line-soft);
+  padding:12px 14px;
+}
+.loc-head strong{display:block;font-size:15px}
+.loc-head span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.loc-body{padding:14px}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:var(--tap);
+  width:100%;
+  padding:12px 18px;
+  font-family:inherit;
+  font-size:16px;
+  font-weight:700;
+  border-radius:8px;
+  border:1.5px solid transparent;
+  cursor:pointer;
+  line-height:1.2;
+}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover:not(:disabled){background:#c94d21}
+.btn-ghost{background:#fff;color:var(--navy);border-color:var(--line)}
+.btn-ghost:hover:not(:disabled){border-color:var(--navy)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn-sm{min-height:40px;font-size:14px;width:auto;padding:8px 14px}
+
+.divider{
+  display:flex;align-items:center;gap:12px;
+  margin:14px 0;color:var(--muted);font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.divider::before,.divider::after{
+  content:"";flex:1;height:1px;background:var(--line-soft);
+}
+
+/* ---------- SIGNATURE: confidence strip ---------- */
+.conf{
+  margin-top:14px;
+  border:1.5px solid var(--line);
+  border-left-width:5px;
+  border-radius:8px;
+  background:#fbfcfe;
+  padding:12px 14px;
+  transition:border-color .18s ease, background .18s ease;
+}
+.conf[data-state="empty"]{border-left-color:var(--line);color:var(--muted)}
+.conf[data-state="reliable"]{border-left-color:var(--teal);background:#f1fbf8}
+.conf[data-state="moderate"]{border-left-color:var(--warn);background:var(--warn-bg)}
+.conf[data-state="poor"]{border-left-color:var(--warn);background:var(--warn-bg)}
+.conf[data-state="rejected"]{border-left-color:var(--danger);background:var(--danger-bg)}
+.conf[data-state="conflict"]{border-left-color:var(--danger);background:var(--danger-bg)}
+
+.conf-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.conf-badge{
+  font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;background:var(--line-soft);color:var(--muted);
+  white-space:nowrap;
+}
+.conf[data-state="reliable"] .conf-badge{background:var(--teal);color:#04352b}
+.conf[data-state="moderate"] .conf-badge,
+.conf[data-state="poor"] .conf-badge{background:var(--warn);color:#fff}
+.conf[data-state="rejected"] .conf-badge,
+.conf[data-state="conflict"] .conf-badge{background:var(--danger);color:#fff}
+.conf-msg{font-size:14px;line-height:1.45;margin:6px 0 0}
+.conf-meta{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12.5px;color:var(--muted);margin-top:8px;word-break:break-all;
+}
+.conf-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- map ---------- */
+.map-shell{margin-top:6px}
+#map{
+  height:340px;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  z-index:0;
+}
+.map-note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+
+/* ---------- 112 warning ---------- */
+.alert112{
+  margin:16px 0 0;
+  padding:16px;
+  background:var(--danger-bg);
+  border-left:5px solid var(--danger);
+  border-radius:8px;
+}
+.alert112 strong{
+  display:block;font-size:17px;color:#7f1d1d;margin-bottom:6px;
+  font-family:"Source Serif 4",Georgia,serif;
+}
+.alert112 p{margin:0 0 12px;font-size:14.5px;line-height:1.5;color:#4a1414}
+.alert112 a{
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:var(--tap);padding:12px 22px;
+  background:var(--danger);color:#fff;text-decoration:none;
+  border-radius:8px;font-weight:800;font-size:16px;
+}
+.hidden{display:none !important}
+
+/* ---------- ops preview ---------- */
+.ops{
+  background:var(--navy);
+  color:#e8eef7;
+  border-radius:var(--radius);
+  padding:20px 18px;
+  margin-bottom:16px;
+}
+.ops h2{
+  font-family:"Source Serif 4",Georgia,serif;
+  font-size:18px;margin:0 0 3px;color:#fff;font-weight:700;
+}
+.ops .ops-sub{font-size:13px;color:#a9bdd8;margin:0 0 16px}
+.ops-card{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;padding:14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:break-word;
+}
+.ops-flag{color:#ffb4a8;font-weight:700}
+.ops-ok{color:#7fe3c6;font-weight:700}
+
+details.json{margin-top:14px}
+details.json summary{
+  cursor:pointer;font-size:13px;font-weight:700;color:#a9bdd8;padding:4px 0;
+}
+details.json pre{
+  background:rgba(0,0,0,.28);border-radius:8px;padding:12px;overflow:auto;
+  font-size:12px;line-height:1.6;margin:8px 0 0;color:#dbe6f4;
+}
+
+/* ---------- sim panel ---------- */
+.sim{
+  background:#fff;border:1.5px dashed var(--line);
+  border-radius:var(--radius);padding:18px;
+}
+.sim h2{font-size:15px;margin:0 0 3px;color:var(--navy);font-family:"Mulish",sans-serif;font-weight:800}
+.sim p{font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.45}
+.sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.sim-grid .btn{font-size:13.5px;min-height:44px;padding:8px 10px}
+
+@media (max-width:520px){
+  .wrap{padding:14px 12px 60px}
+  .card{padding:18px 14px}
+  #map{height:300px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="proto-bar">
+    <h1>Vikailmoitus — sijaintiosio</h1>
+    <p>Prototyyppi v0.1 · Herrfors Nät · Ei kytketty mihinkään järjestelmään. Alareunassa simulointipainikkeet, joilla voi testata kaikki sijaintitilat ilman oikeaa GPS:ää.</p>
+  </div>
+
+  <!-- ============ FAULT TYPE ============ -->
+  <div class="card">
+    <h2>Vian tyyppi</h2>
+    <p class="card-sub">Valitse lähinnä vastaava vaihtoehto.</p>
+
+    <div class="field">
+      <label class="lbl" for="faultType">Mistä on kyse? <span class="req">*</span></label>
+      <select id="faultType">
+        <option value="">Valitse…</option>
+        <option value="outage">Sähkökatko</option>
+        <option value="damaged">Johto tai pylväs vaurioitunut</option>
+        <option value="flicker">Jännitehäiriö tai valojen välkkyminen</option>
+        <option value="meter">Vika mittarissa tai liittymässä</option>
+        <option value="streetlight">Katuvalo ei toimi</option>
+        <option value="other">Muu vika</option>
+      </select>
+
+      <div id="alert112" class="alert112 hidden" role="alert">
+        <strong>Älä lähesty vauriokohtaa</strong>
+        <p>Vaurioitunut johto tai pylväs voi olla hengenvaarallinen. Pidä etäisyyttä ja varoita muita paikalla olijoita. Voit täyttää ilmoituksen turvallisen matkan päästä.</p>
+        <a href="tel:112">Soita 112</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LOCATION ============ -->
+  <div class="card">
+    <h2>Vian sijainti</h2>
+    <p class="card-sub">Tarkka sijainti nopeuttaa vian korjaamista. Voit antaa sen kolmella tavalla.</p>
+
+    <!-- at site -->
+    <div class="field">
+      <label class="lbl">Oletko juuri nyt vian luona? <span class="req">*</span></label>
+      <span class="hint">Tämä kertoo meille, voiko puhelimen paikannusta käyttää.</span>
+      <div class="seg">
+        <label><input type="radio" name="atSite" value="yes"> Kyllä, olen paikalla</label>
+        <label><input type="radio" name="atSite" value="no"> En ole paikalla</label>
+      </div>
+    </div>
+
+    <div class="loc">
+      <div class="loc-head">
+        <strong>Sijainnin antaminen</strong>
+        <span id="locHeadHint">Vastaa ensin yllä olevaan kysymykseen.</span>
+      </div>
+      <div class="loc-body">
+
+        <!-- 1. GPS -->
+        <div id="gpsBlock" class="hidden">
+          <button type="button" class="btn btn-primary" id="btnGps">Käytä nykyistä sijaintiani</button>
+          <div class="divider">tai</div>
+        </div>
+
+        <!-- 2. Map pin -->
+        <div class="map-shell">
+          <div id="map"></div>
+          <p class="map-note">Napauta karttaa asettaaksesi merkin. Voit raahata merkkiä tai napauttaa uutta kohtaa. Zoomaa lähemmäs, jos tiedät tarkan paikan.</p>
+        </div>
+
+        <!-- 3. Address -->
+        <div class="field" style="margin-top:18px;margin-bottom:0">
+          <label class="lbl" for="address">Osoite tai paikan kuvaus <span class="req">*</span></label>
+          <span class="hint">Esim. katuosoite, tienristeys tai maamerkki. Täyttyy automaattisesti, jos käytät paikannusta tai karttaa — voit aina muokata.</span>
+          <textarea id="address" placeholder="Esim. Ähtäväntie 340 tai &quot;metsätie n. 2 km Ähtävän risteyksestä pohjoiseen&quot;"></textarea>
+        </div>
+
+        <!-- SIGNATURE: confidence strip -->
+        <div class="conf" id="conf" data-state="empty" aria-live="polite">
+          <div class="conf-top">
+            <span class="conf-badge" id="confBadge">Ei sijaintia</span>
+            <span style="font-size:13px;font-weight:700" id="confTitle">Sijaintia ei ole vielä annettu</span>
+          </div>
+          <p class="conf-msg" id="confMsg">Käytä paikannusta, aseta merkki kartalle tai kirjoita osoite.</p>
+          <div class="conf-meta hidden" id="confMeta"></div>
+          <div class="conf-actions hidden" id="confActions">
+            <button type="button" class="btn btn-ghost btn-sm" id="btnClearCoords">Poista koordinaatit</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OPS PREVIEW ============ -->
+  <div class="ops">
+    <h2>Mitä päivystäjä näkee</h2>
+    <p class="ops-sub">Päivitetään reaaliajassa. Tämä on se, mistä kannattaa keskustella päivystyksen kanssa.</p>
+    <div class="ops-card" id="opsCard">Sijaintia ei ole annettu.</div>
+    <details class="json">
+      <summary>Tallennettava data (kehittäjälle)</summary>
+      <pre id="jsonOut">{}</pre>
+    </details>
+  </div>
+
+  <!-- ============ SIM ============ -->
+  <div class="sim">
+    <h2>Simulointi — vain prototyypissä</h2>
+    <p>Selaimen paikannus ei toimi kaikissa esikatseluikkunoissa eikä paikallisesti avatussa tiedostossa. Näillä voit testata jokaisen tilan ilman oikeaa GPS:ää.</p>
+    <div class="sim-grid">
+      <button type="button" class="btn btn-ghost" data-sim="12">Hyvä fix · 12 m</button>
+      <button type="button" class="btn btn-ghost" data-sim="140">Kohtalainen · 140 m</button>
+      <button type="button" class="btn btn-ghost" data-sim="600">Heikko · 600 m</button>
+      <button type="button" class="btn btn-ghost" data-sim="2400">Hylättävä · 2400 m</button>
+      <button type="button" class="btn btn-ghost" data-sim="denied">Käyttäjä kielsi</button>
+      <button type="button" class="btn btn-ghost" data-sim="reset">Nollaa lomake</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // Jakobstad / Pietarsaari — Nät service area centre
+  var HOME = [63.6745, 22.7031];
+
+  var state = {
+    atSite: null,
+    address: "",
+    addressSource: null,     // typed | reverse-geocoded | derived-from-pin | edited-after-geocode
+    lat: null, lng: null,
+    accuracyM: null,
+    locationSource: null,    // gps | map-pin
+    zoomAtDrop: null,
+    capturedAt: null,
+    confidence: "empty",     // empty | reliable | moderate | poor | rejected | conflict
+    overrodeGps: false
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var map, marker;
+
+  /* ---------- map ---------- */
+  map = L.map('map', { zoomControl:true, scrollWheelZoom:false }).setView(HOME, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  setTimeout(function(){ map.invalidateSize(); }, 200);
+
+  function placeMarker(lat, lng, fromUser){
+    if(marker){
+      marker.setLatLng([lat,lng]);
+    } else {
+      marker = L.marker([lat,lng], { draggable:true }).addTo(map);
+      marker.on('dragend', function(e){
+        var p = e.target.getLatLng();
+        setFromPin(p.lat, p.lng);
+      });
+    }
+    if(fromUser) map.panTo([lat,lng]);
+  }
+
+  map.on('click', function(e){
+    setFromPin(e.latlng.lat, e.latlng.lng);
+  });
+
+  /* ---------- state setters ---------- */
+  function setFromPin(lat, lng){
+    var hadGps = state.locationSource === 'gps';
+    state.lat = round6(lat);
+    state.lng = round6(lng);
+    state.locationSource = 'map-pin';
+    state.accuracyM = null;              // a hand-placed pin has no machine accuracy
+    state.zoomAtDrop = map.getZoom();
+    state.capturedAt = new Date().toISOString();
+    state.confidence = 'reliable';       // deliberate act by someone who knows
+    state.overrodeGps = hadGps;
+    placeMarker(lat, lng, false);
+    reverseGeocode(lat, lng, 'derived-from-pin');
+    render();
+  }
+
+  function setFromGps(lat, lng, accuracy){
+    state.lat = round6(lat);
+    state.lng = round6(lng);
+    state.locationSource = 'gps';
+    state.accuracyM = Math.round(accuracy);
+    state.zoomAtDrop = null;
+    state.capturedAt = new Date().toISOString();
+    state.overrodeGps = false;
+    state.confidence = tierFor(accuracy);
+
+    if(state.confidence === 'rejected'){
+      // too imprecise to be useful — do not keep the coordinates
+      state.lat = null; state.lng = null; state.locationSource = null;
+      render();
+      return;
+    }
+    placeMarker(lat, lng, true);
+    map.setView([lat,lng], accuracy < 60 ? 17 : accuracy < 250 ? 15 : 13);
+    reverseGeocode(lat, lng, 'reverse-geocoded');
+    render();
+  }
+
+  function tierFor(a){
+    if(a <= 50) return 'reliable';
+    if(a <= 200) return 'moderate';
+    if(a <= 1000) return 'poor';
+    return 'rejected';
+  }
+
+  function round6(n){ return Math.round(n*1e6)/1e6; }
+
+  /* ---------- reverse geocoding (Nominatim, no key) ---------- */
+  var geoTimer = null;
+  function reverseGeocode(lat, lng, sourceTag){
+    clearTimeout(geoTimer);
+    geoTimer = setTimeout(function(){
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=18&addressdetails=1&accept-language=fi&lat='+lat+'&lon='+lng)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d && d.display_name){
+            $('address').value = d.display_name;
+            state.address = d.display_name;
+            state.addressSource = sourceTag;
+            render();
+          }
+        })
+        .catch(function(){ /* geocoding failure must never break location capture */ });
+    }, 350);
+  }
+
+  /* ---------- at-site gate ---------- */
+  document.querySelectorAll('input[name=atSite]').forEach(function(r){
+    r.addEventListener('change', function(){
+      state.atSite = r.value === 'yes';
+      $('gpsBlock').classList.toggle('hidden', !state.atSite);
+      $('locHeadHint').textContent = state.atSite
+        ? 'Voit käyttää puhelimen paikannusta, karttaa tai kirjoittaa osoitteen.'
+        : 'Aseta merkki kartalle tai kirjoita osoite. Puhelimen paikannus ei auta, koska et ole kohteessa.';
+      render();
+    });
+  });
+
+  /* ---------- address editing ---------- */
+  $('address').addEventListener('input', function(){
+    state.address = this.value;
+    if(state.lat !== null && state.addressSource && state.addressSource !== 'typed'){
+      state.addressSource = 'edited-after-geocode';
+      state.confidence = 'conflict';
+    } else if(state.lat === null){
+      state.addressSource = 'typed';
+    }
+    render();
+  });
+
+  /* ---------- clear coords ---------- */
+  $('btnClearCoords').addEventListener('click', function(){
+    state.lat = null; state.lng = null; state.accuracyM = null;
+    state.locationSource = null; state.zoomAtDrop = null;
+    state.capturedAt = null; state.overrodeGps = false;
+    state.confidence = state.address ? 'empty' : 'empty';
+    state.addressSource = state.address ? 'typed' : null;
+    if(marker){ map.removeLayer(marker); marker = null; }
+    render();
+  });
+
+  /* ---------- real geolocation ---------- */
+  $('btnGps').addEventListener('click', function(){
+    var b = this;
+    if(!('geolocation' in navigator)){
+      showFailure('Selaimesi ei tue paikannusta. Aseta merkki kartalle tai kirjoita osoite.');
+      return;
+    }
+    b.disabled = true; b.textContent = 'Haetaan sijaintia…';
+    navigator.geolocation.getCurrentPosition(
+      function(pos){
+        resetBtn(b);
+        setFromGps(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+      },
+      function(err){
+        resetBtn(b);
+        var m = {
+          1:'Paikannus estettiin. Aseta merkki kartalle tai kirjoita osoite.',
+          2:'Sijaintia ei voitu määrittää. Aseta merkki kartalle tai kirjoita osoite.',
+          3:'Paikannus kesti liian kauan. Aseta merkki kartalle tai kirjoita osoite.'
+        };
+        showFailure(m[err.code] || 'Paikannus epäonnistui. Aseta merkki kartalle.');
+      },
+      { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+    );
+  });
+
+  function resetBtn(b){ b.disabled = false; b.textContent = 'Käytä nykyistä sijaintiani'; }
+
+  function showFailure(msg){
+    var c = $('conf');
+    c.dataset.state = 'rejected';
+    $('confBadge').textContent = 'Ei onnistunut';
+    $('confTitle').textContent = 'Paikannus ei onnistunut';
+    $('confMsg').textContent = msg;
+    $('confMeta').classList.add('hidden');
+    $('confActions').classList.add('hidden');
+    $('address').focus();
+  }
+
+  /* ---------- render ---------- */
+  var COPY = {
+    empty:{ badge:'Ei sijaintia', title:'Sijaintia ei ole vielä annettu',
+            msg:'Käytä paikannusta, aseta merkki kartalle tai kirjoita osoite.' },
+    reliable:{ badge:'Luotettava', title:'Sijainti on tarkka',
+            msg:'Tämä riittää vian paikantamiseen.' },
+    moderate:{ badge:'Kohtalainen', title:'Sijainti on suunnilleen oikein',
+            msg:'Tarkenna osoitetta tai siirrä merkkiä kartalla, jos tiedät tarkemman paikan.' },
+    poor:{ badge:'Epätarkka', title:'Sijainti on epätarkka',
+            msg:'Puhelin ei saanut tarkkaa paikannusta. Aseta merkki kartalle tai kirjoita osoite mahdollisimman tarkasti.' },
+    rejected:{ badge:'Hylätty', title:'Sijainti oli liian epätarkka',
+            msg:'Emme tallentaneet koordinaatteja, koska ne olisivat olleet harhaanjohtavia. Aseta merkki kartalle tai kirjoita osoite.' },
+    conflict:{ badge:'Tarkista', title:'Osoite ja merkki eivät ehkä täsmää',
+            msg:'Muokkasit osoitetta sen jälkeen, kun sijainti haettiin. Kartan merkki osoittaa edelleen alkuperäiseen kohtaan.' }
+  };
+
+  function render(){
+    var c = $('conf'), s = state.confidence, t = COPY[s] || COPY.empty;
+    c.dataset.state = s;
+    $('confBadge').textContent = t.badge;
+    $('confTitle').textContent = t.title;
+    $('confMsg').textContent = t.msg;
+
+    var hasCoords = state.lat !== null;
+    var meta = $('confMeta');
+    if(hasCoords){
+      var bits = [state.lat.toFixed(6)+', '+state.lng.toFixed(6)];
+      bits.push(state.locationSource === 'gps' ? 'puhelimen paikannus' : 'merkitty kartalle');
+      if(state.accuracyM !== null) bits.push('n. '+state.accuracyM+' m');
+      if(state.zoomAtDrop !== null) bits.push('zoom '+state.zoomAtDrop);
+      meta.textContent = bits.join(' · ');
+      meta.classList.remove('hidden');
+      $('confActions').classList.remove('hidden');
+    } else {
+      meta.classList.add('hidden');
+      $('confActions').classList.add('hidden');
+    }
+    renderOps();
+  }
+
+  function renderOps(){
+    var out = [];
+    var addrLabels = {
+      'typed':'ilmoittajan kirjoittama',
+      'reverse-geocoded':'haettu paikannuksesta, ei vahvistettu',
+      'derived-from-pin':'johdettu kartan merkistä, ei vahvistettu',
+      'edited-after-geocode':'ilmoittaja muokkasi haun jälkeen'
+    };
+
+    if(!state.address && state.lat === null){
+      $('opsCard').textContent = 'Sijaintia ei ole annettu.';
+      $('jsonOut').textContent = JSON.stringify(cleanState(), null, 2);
+      return;
+    }
+
+    out.push('Osoite:      ' + (state.address || '—'));
+    if(state.addressSource) out.push('             (' + addrLabels[state.addressSource] + ')');
+
+    if(state.lat !== null){
+      var conf = state.confidence === 'reliable'
+        ? '<span class="ops-ok">luotettava</span>'
+        : '<span class="ops-flag">' + (COPY[state.confidence]||COPY.empty).badge.toLowerCase() + '</span>';
+      var extra = [];
+      if(state.locationSource === 'gps') extra.push('puhelimen paikannus');
+      if(state.locationSource === 'map-pin') extra.push('merkitty käsin kartalle');
+      if(state.accuracyM !== null) extra.push('n. ' + state.accuracyM + ' m');
+      if(state.zoomAtDrop !== null) extra.push(zoomWord(state.zoomAtDrop));
+      out.push('Koordinaatit: ' + state.lat.toFixed(6) + ', ' + state.lng.toFixed(6) + ' — ' + conf + ' (' + extra.join(', ') + ')');
+    } else {
+      out.push('Koordinaatit: <span class="ops-flag">ei saatavilla</span>');
+    }
+
+    out.push('Ilmoittaja:  ' + (state.atSite === null ? '—' : state.atSite ? 'paikalla kohteessa' : '<span class="ops-flag">EI paikalla kohteessa</span>'));
+
+    if(state.overrodeGps) out.push('<span class="ops-flag">! Ilmoittaja korjasi paikannuksen kartalle.</span>');
+    if(state.confidence === 'conflict') out.push('<span class="ops-flag">! Osoitetta muokattu haun jälkeen — varmista kumpi pätee.</span>');
+    if(state.atSite === false && state.lat === null) out.push('<span class="ops-flag">! Ei koordinaatteja eikä ilmoittaja ole paikalla — soita ilmoittajalle.</span>');
+
+    if(state.lat !== null){
+      out.push('');
+      out.push('[Avaa kartalla] https://www.openstreetmap.org/?mlat='+state.lat+'&mlon='+state.lng+'#map=17/'+state.lat+'/'+state.lng);
+    }
+
+    $('opsCard').innerHTML = out.join('\n');
+    $('jsonOut').textContent = JSON.stringify(cleanState(), null, 2);
+  }
+
+  function zoomWord(z){
+    if(z >= 17) return 'katutaso';
+    if(z >= 14) return 'kylä-/kaupunginosataso';
+    return 'yleiskuva — tarkoitti todennäköisesti aluetta';
+  }
+
+  function cleanState(){
+    return {
+      locationAddress: state.address || null,
+      locationAddressSource: state.addressSource,
+      locationLat: state.lat,
+      locationLng: state.lng,
+      locationSource: state.locationSource,
+      locationAccuracyM: state.accuracyM,
+      locationZoomAtDrop: state.zoomAtDrop,
+      locationCapturedAt: state.capturedAt,
+      locationAtSite: state.atSite,
+      locationConfidence: state.confidence,
+      locationOverrodeGps: state.overrodeGps
+    };
+  }
+
+  /* ---------- 112 conditional ---------- */
+  $('faultType').addEventListener('change', function(){
+    $('alert112').classList.toggle('hidden', this.value !== 'damaged');
+  });
+
+  /* ---------- simulation ---------- */
+  document.querySelectorAll('[data-sim]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var v = b.dataset.sim;
+      if(v === 'reset'){ location.reload(); return; }
+      if(v === 'denied'){
+        showFailure('Paikannus estettiin. Aseta merkki kartalle tai kirjoita osoite.');
+        return;
+      }
+      var acc = parseInt(v,10);
+      // jitter around the service area so each sim looks plausible
+      var lat = HOME[0] + (Math.random()-0.5)*0.02;
+      var lng = HOME[1] + (Math.random()-0.5)*0.04;
+      setFromGps(lat, lng, acc);
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
