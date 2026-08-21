@@ -147,6 +147,56 @@ none of the characters those filters touch, so the blob arrives byte for byte. I
 also makes the field unreadable in the form editor, which is the trade: the source of
 truth is `hn-location.js` in this repo, and `build.py` is what puts it in the form.
 
+### 5. The same CSP also blocked Leaflet's stylesheet — and that was the half-grey map
+
+Adding OpenStreetMap to `img-src` was necessary and not sufficient. The tiles then
+arrived, and the map still rendered half grey, because `style-src` does not list cdnjs
+either: the `<link>` to `leaflet.min.css` is refused with `style-src-elem`. Without
+Leaflet's stylesheet, `.leaflet-tile` never gets `position: absolute`, so tiles load
+and then flow as static inline images. Computed `position` on a tile was `static` —
+that one word was the whole answer.
+
+Leaflet's own maths was right the entire time: the inline `translate3d` values were
+contiguous at 256px. What was wrong was the layout they were applied to.
+
+Two casualties of the same allowlist, both fixed inside the field:
+
+- **Leaflet's stylesheet is vendored** into the field's `<style>` block
+  (`vendor-leaflet.css`, 10.9KB). Inline CSS is allowed by the policy, so nothing needs
+  changing on the site. Its three `url(images/…)` references are stripped — the layers
+  control is never added and the marker no longer needs an image.
+- **The marker is an inline SVG.** Leaflet's default icon is a PNG on the CDN, which
+  `img-src` does not permit either, so the pin would have silently never appeared.
+
+Plus a guard worth having anywhere: `#hn-map img{max-width:none!important}`. Leaflet
+1.9.4 exempts only image layers from `max-width`, not tiles, and a tile's `max-width`
+resolves against a tile container with no width — so a theme's `img{max-width:100%}`
+can clamp tiles to nothing.
+
+Verified on herrforsnat.fi's Gravity Forms preview after the change: tile `position`
+`absolute`, `max-width` `none`, rendered stride exactly 256px, 22 of 22 tiles carrying
+pixels, **100% coverage**.
+
+#### How long this took, and why
+
+Longer than it should have. Three wrong turns worth recording, because each one has a
+lesson that generalises:
+
+- **I counted loaded tiles instead of measuring coverage,** and reported the map as
+  working on that basis. Eight tiles can all be "loaded" while covering a third of the
+  map. Measure the thing the user sees, not a proxy for it.
+- **I shipped a `tileerror` retry as a defensive guess.** It was worse than useless:
+  Leaflet recycles tile elements, so a delayed `img.src` write lands on an element that
+  now belongs to a different coordinate. Reverted. Do not ship speculative fixes into
+  the thing being diagnosed.
+- **Half my measurements came from a background tab,** where `requestAnimationFrame` is
+  paused, so Leaflet's fade never completed and every tile read `opacity: 0`. Check
+  `document.hidden` before trusting anything about rendering.
+
+The measurement that ended it was asking the browser instead of inferring: dump the
+inline `translate3d` values, read computed `position`, and listen for
+`securitypolicyviolation`. All three were available from the first minute.
+
 ### 4. The site's CSP blocked the map tiles — resolved 21.8.2026
 
 **Closed.** Oskar merged [generoi/herrfors#159](https://github.com/generoi/herrfors/pull/159)
