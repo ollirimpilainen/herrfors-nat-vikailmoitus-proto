@@ -7,7 +7,7 @@ instead of being hand-escaped inside a JSON blob.
 
     python3 gravity-forms/build.py
 """
-import io, json, os, sys
+import base64, io, json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 read = lambda n: io.open(os.path.join(HERE, n), encoding='utf-8').read()
@@ -96,16 +96,17 @@ HTML_CONF = '''<div id="hn-loc2">
   </div>
 </div>
 
-<!-- The script is parked in a non-executable type and promoted to a real script by
-     the loader below. Herrfors' own consent layer (Genero CMP) neutralises inline
-     scripts that arrive with the parsed document, but scripts created at runtime do
-     run — verified on the live site. Parking it deliberately means there is exactly
-     one code path on every environment instead of two. -->
-<script id="hn-src" type="text/hn-source">
-%s
-</script>
+<!-- The logic is parked as base64 and promoted to a real script by the loader below.
+     Two things on this site force that shape. Herrfors' consent layer neutralises
+     inline scripts that arrive with the parsed document, while scripts created at
+     runtime run fine. And WordPress' text filters rewrite every "&" in a field
+     rendered inside page content to "&#038;", which turns "a && b" into a syntax
+     error and corrupts query strings — base64 carries none of the characters those
+     filters touch. The source of truth is gravity-forms/hn-location.js in the repo;
+     nobody is meant to read this blob. -->
+<script id="hn-src" type="text/hn-source">%s</script>
 <img src="data:," alt="" aria-hidden="true" style="position:absolute;width:0;height:0;opacity:0"
-     onerror="this.onerror=null;(function(s){if(!s)return;var n=document.createElement('script');n.textContent=s.textContent;document.head.appendChild(n);})(document.getElementById('hn-src'))">''' % JS
+     onerror="this.onerror=null;(function(s){if(!s)return;var b=atob(s.textContent.replace(/[^A-Za-z0-9+/=]/g,''));var t=new TextDecoder().decode(Uint8Array.from(b,function(c){return c.charCodeAt(0)}));var n=document.createElement('script');n.textContent=t;document.head.appendChild(n);})(document.getElementById('hn-src'))">''' % base64.b64encode(JS.encode('utf-8')).decode('ascii')
 
 # ---- field 7: what the duty officer sees (demo only, delete to remove) ----
 HTML_OPS = '''<div id="hn-ops">
