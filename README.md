@@ -146,11 +146,10 @@ a hard constraint: plugin purchases need sign-off, so v1 has to work without one
   a duty officer finds that useful or misleading is still a päivystys call.
 - **Nominatim rate limit** (~1 req/s) is debounced but not hard-guarded.
 - **Nominatim needs a server-side proxy — confirmed, not hypothetical.** A browser
-  can't set User-Agent, so identification falls back to Referer. And herrforsnat.fi
-  sends a `connect-src` policy that blocks browser `fetch` outright; the Gravity Forms
-  port works around it with Nominatim's JSONP callback. One small PHP route solves
-  identification, the policy and the rate limit together. See
-  [gravity-forms/README.md](gravity-forms/README.md).
+  can't set User-Agent, so identification falls back to Referer, and the rate limit is
+  debounced rather than guarded. One small PHP route solves both. The CSP half of this
+  is resolved — herrforsnat.fi now allows OpenStreetMap, so `fetch` works there and the
+  JSONP fallback is dormant. See [gravity-forms/README.md](gravity-forms/README.md).
 - **Network area check** is out of scope. Needs the Nät boundary polygon, which may
   not exist in a usable form.
 

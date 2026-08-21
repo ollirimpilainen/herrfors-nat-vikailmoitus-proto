@@ -147,9 +147,20 @@ none of the characters those filters touch, so the blob arrives byte for byte. I
 also makes the field unreadable in the form editor, which is the trade: the source of
 truth is `hn-location.js` in this repo, and `build.py` is what puts it in the form.
 
-### 4. The site's CSP blocks the map tiles
+### 4. The site's CSP blocked the map tiles — resolved 21.8.2026
 
-This one the form cannot fix. `herrforsnat.fi` sends an enforcing
+**Closed.** Oskar merged [generoi/herrfors#159](https://github.com/generoi/herrfors/pull/159)
+(squashed as `ba6f2809`) and it is deployed. Verified on the live demo page afterwards:
+zero `securitypolicyviolation` events, all eight tiles loaded with real pixels at zoom
+17, and reverse geocoding now travels over `fetch` in ~400 ms instead of the JSONP
+fallback — so the `connect-src` line did its job and the workaround is dormant on this
+site. It stays in the code for environments that need it.
+
+The account below is kept because the diagnosis is the reusable part.
+
+---
+
+This one the form could not fix. `herrforsnat.fi` sends an enforcing
 `Content-Security-Policy` whose `img-src` is an allowlist — Hotjar, Clarity, Google
 Tag Manager, DoubleClick, Facebook, YouTube — and **OpenStreetMap is not on it**. The
 browser says so directly: a `securitypolicyviolation` event fires with
@@ -160,7 +171,7 @@ Everything else on the page works: the script loads, the map initialises, the ad
 auto-fills, every confidence state behaves, and all twelve hidden fields track the
 state. Only the tile images are blocked, so the map reads as a blank grey box.
 
-**Three lines somewhere in the CSP configuration fix it:**
+**What fixed it** — a new `OpenStreetMap` preset in the theme's Spatie CSP config:
 
 ```
 img-src      ... *.tile.openstreetmap.org
