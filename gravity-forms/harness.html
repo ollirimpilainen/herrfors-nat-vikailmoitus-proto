@@ -170,6 +170,11 @@ body.hn-map-locked{overflow:hidden}
 .hn-stage.hn-active .leaflet-bottom.leaflet-right{bottom:74px}
 #hn-map .leaflet-top{margin-top:0}
 
+/* A WordPress theme almost always ships img{max-width:100%}. Leaflet 1.9.4 only
+   guards image layers, not tiles, and a tile's max-width resolves against a tile
+   container that has no width — so the theme's rule can clamp tiles to nothing. */
+#hn-map img{max-width:none !important;max-height:none !important}
+
 .hn-pin{background:none;border:0}
 .hn-pin svg{display:block;filter:drop-shadow(0 2px 3px rgba(11,37,69,.4))}
 
