@@ -45,17 +45,26 @@ select,textarea{width:100%;min-height:52px;padding:12px 14px;font:inherit;font-s
 <link id="hn-leaflet-css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style id="hn-css">
 /* Herrfors Nät — location section for Gravity Forms.
-   Everything is prefixed hn- and every custom property is scoped to the two
-   containers, so nothing leaks into the theme and the theme cannot reach in. */
-#hn-loc,#hn-loc2{
+   Every class is prefixed hn-, so nothing here can collide with the theme.
+
+   The custom properties sit on :root rather than on the containers. They were
+   scoped at first, which broke the moment the form went on a real page: the 112
+   warning and the two demo panels are separate Gravity Forms fields and therefore
+   live outside the containers, so var(--hn-danger) resolved to nothing and the
+   "Soita 112" button rendered as white text on a transparent background. Field
+   order is the editor's to change, so the variables have to be reachable from
+   anywhere. The hn- prefix is what keeps that safe. */
+:root{
   --hn-navy:#0b2545; --hn-orange:#E05A2B; --hn-teal:#3ABFA1;
   --hn-danger:#C62828; --hn-danger-bg:#FDECEA; --hn-warn:#B26A00; --hn-warn-bg:#FFF6E5;
   --hn-ink:#12203a; --hn-muted:#5a6b85; --hn-line:#d9e0ea; --hn-line-soft:#eaeff5;
   --hn-tap:52px;
+}
+#hn-loc,#hn-loc2,.hn-112,#hn-ops,#hn-sim{
   font-family:"Mulish",system-ui,-apple-system,sans-serif;
   color:var(--hn-ink); font-size:16px; line-height:1.55;
 }
-#hn-loc *,#hn-loc2 *{box-sizing:border-box}
+#hn-loc *,#hn-loc2 *,.hn-112 *,#hn-ops *,#hn-sim *{box-sizing:border-box}
 .hn-hidden{display:none !important}
 
 .hn-head{background:#f7fafc;border:1.5px solid var(--hn-line);border-bottom:0;
@@ -244,7 +253,9 @@ body.hn-map-locked{overflow:hidden}
   .hn-ops-row > .hn-ops-k:first-child{margin-top:0}
 }
 @media (max-width:520px){ #hn-map{height:300px} }
-@media (prefers-reduced-motion:reduce){ #hn-loc *,#hn-loc2 *{transition:none !important;animation:none !important} }
+@media (prefers-reduced-motion:reduce){
+  #hn-loc *,#hn-loc2 *,.hn-112 *,#hn-ops *,#hn-sim *{transition:none !important;animation:none !important}
+}
 
 </style>
 
