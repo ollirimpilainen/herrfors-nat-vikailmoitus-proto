@@ -89,10 +89,18 @@ The `<script>` was served intact — confirmed in the raw HTML response — and 
 ran. No console error, no CSP violation, no `type` rewrite, nothing stripped. But
 re-creating the very same code as a script element at runtime ran it perfectly.
 
-The site runs **Genero CMP**, the consent layer, and the page carries exactly one
-`type="text/plain"` script, which is the classic fingerprint of a consent-based
-script blocker. It evidently neutralises parser-inserted inline scripts and leaves
-dynamically created ones alone.
+The cause is the site's CSP, and it took a detour to establish. The first guess was
+Genero CMP, the consent layer — the page carries one `type="text/plain"` script, the
+classic fingerprint of a consent-based script blocker. That was wrong. Reading the
+enforced policy verbatim off a `securitypolicyviolation` event settled it: `script-src`
+carries a per-request **nonce** and **`'strict-dynamic'`**. Under that policy an inline
+script without the nonce is refused, while a script created at runtime by already
+trusted code is allowed — exactly the behaviour observed. The policy is doing its job
+correctly; nothing is misconfigured.
+
+That also explains why Leaflet loads from cdnjs even though cdnjs appears nowhere in
+`script-src`: `'strict-dynamic'` makes the host allowlist irrelevant for scripts our
+own trusted code injects.
 
 So the port no longer relies on an inline script executing. The code is parked in
 `<script id="hn-src" type="text/hn-source">` — a type no browser executes — and an
@@ -101,9 +109,11 @@ handlers fire regardless of how the element reached the DOM. Parking it delibera
 means there is exactly **one** code path on every site rather than one that sometimes
 runs twice.
 
-That is a workaround, not an answer. The right fix belongs to Genero CMP: classify
-this as a necessary/functional script so it runs normally. **Worth asking whoever
-maintains the CMP** — it is our own plugin.
+That is a workaround, not an answer. The clean fix is to give the field's script the
+CSP nonce that the theme already generates per request — a Gravity Forms HTML field
+cannot do that on its own, so it needs a filter on the theme side, or the script moved
+into a properly enqueued asset where Spatie's nonce handling applies. Either belongs in
+the production build rather than in this demo.
 
 ### 2. The site forbids cross-origin fetch and XHR
 
