@@ -36,6 +36,11 @@ Changing these changes the product, not just the code. Ask first.
    activated. The activating tap must not also place a pin.
 5. **"Are you at the site?" gates the GPS option.** If the reporter isn't there,
    automatic location is hidden entirely rather than offered and ignored.
+6. **The map is necessary functionality, not a consent-gated extra.** Decided by
+   Olli, 21.8.2026, after the live demo showed herrforsnat.fi's CSP blocking the
+   tiles. A reporter must be able to point at a fault without first accepting
+   cookies, so the map may not sit behind a consent banner. See
+   `gravity-forms/README.md` for what that requires of the site.
 
 ## Brand
 
