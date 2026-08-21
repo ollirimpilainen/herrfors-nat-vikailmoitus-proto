@@ -76,14 +76,78 @@ logic. Verified in it:
   the map, and restores the strip.
 - re-initialisation on `gform_post_render` without duplicate maps or leaked handlers
 
-## Known risks on a real site
+## Live on herrforsnat.fi
+
+Imported and verified on the client's own site as **form 35**, "Vikailmoitus -
+sijaintiosio (demo v0.3)". Not embedded anywhere; reachable only through Gravity
+Forms' preview, and it sends no notifications. Two things about that site broke the
+port on the first try, and both matter for production.
+
+### 1. Inline scripts that arrive with the page do not execute
+
+The `<script>` was served intact — confirmed in the raw HTML response — and never
+ran. No console error, no CSP violation, no `type` rewrite, nothing stripped. But
+re-creating the very same code as a script element at runtime ran it perfectly.
+
+The site runs **Genero CMP**, the consent layer, and the page carries exactly one
+`type="text/plain"` script, which is the classic fingerprint of a consent-based
+script blocker. It evidently neutralises parser-inserted inline scripts and leaves
+dynamically created ones alone.
+
+So the port no longer relies on an inline script executing. The code is parked in
+`<script id="hn-src" type="text/hn-source">` — a type no browser executes — and an
+`<img src="data:," onerror="…">` promotes it to a real script, because inline event
+handlers fire regardless of how the element reached the DOM. Parking it deliberately
+means there is exactly **one** code path on every site rather than one that sometimes
+runs twice.
+
+That is a workaround, not an answer. The right fix belongs to Genero CMP: classify
+this as a necessary/functional script so it runs normally. **Worth asking whoever
+maintains the CMP** — it is our own plugin.
+
+### 2. The site forbids cross-origin fetch and XHR
+
+`fetch()` to Nominatim fails with `TypeError: Failed to fetch` and never reaches the
+network. Not a Nominatim problem: `fetch()` to cdnjs fails the same way, on a page
+that has just loaded a script *from cdnjs*. Tiles, scripts and stylesheets load;
+`fetch`/`XHR` do not. That is a `Content-Security-Policy: connect-src` restriction —
+element loads answer to other directives.
+
+Reverse geocoding therefore cannot work from the browser on this site. The port falls
+back to Nominatim's `json_callback`, which returns JSONP and arrives as a script load.
+Verified live, ~200–700 ms per lookup. `fetch` stays the first choice on sites without
+the policy.
+
+**For production this settles an open question: the server-side proxy is required,
+not optional.** One small REST route that calls Nominatim from PHP fixes three things
+at once — the policy, the User-Agent identification a browser cannot set, and the rate
+limit. Until then, JSONP keeps the demo honest.
+
+## What the live site revealed about the real form
+
+Form **32 "Vikailmoitus"** already exists and is active: Etunimi, Sukunimi, Puhelin
+(required), Sähköposti, Liitteet, "Mitä vika koskee?", **Osoite**, a "Varoitus" HTML
+field, and Tarkentavat tiedot. Three things follow.
+
+- **The existing address field is a Gravity Forms `address` field** — a composite of
+  street, city, postcode, country. It cannot hold *"metsätie n. 2 km Ähtävän
+  risteyksestä pohjoiseen"*, which is the exact case this whole section exists for.
+  Replacing it with free text, or keeping both, is a decision for Nät — and it should
+  be made before the developer builds anything.
+- **The address is not currently required.** The prototype makes it required. Also a
+  decision, not a detail.
+- **Form 32 has no notifications configured**, and a **Gravityforms Frends** add-on is
+  active. That suggests submissions leave through Frends rather than email, which
+  would answer README open question 2, "where do submitted reports actually land".
+  Worth confirming with Oskari rather than assuming.
+
+## Other risks on a real site
 
 1. **`<script>` and `<style>` inside an HTML field need the `unfiltered_html`
-   capability.** Administrators have it on a single-site install; on multisite only
-   super admins do. If the site strips them on import, the field will render but do
-   nothing — the fallback is a small mu-plugin that enqueues `hn-location.css` and
-   `hn-location.js` instead, with the HTML fields keeping only the markup. **Verify
-   this first after importing.**
+   capability.** herrforsnat.fi is a multisite, where only super admins have it — the
+   account used for the import does, so nothing was stripped. An editor without it
+   would import a field that renders and does nothing. If that happens, enqueue the
+   CSS and JS from a small mu-plugin and keep only markup in the HTML fields.
 2. **A theme that transforms an ancestor** would trap `position:fixed`. Handled: the
    map stage is moved to `<body>` while fullscreen and put back on exit.
 3. **The theme's own button and form styles** may still win where specificity is
